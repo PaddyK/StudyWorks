@@ -16,7 +16,6 @@ import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import com.mysql.jdbc.PreparedStatement;
 
 /**
@@ -98,14 +97,14 @@ public class DataController {
 		reporterIds.add(6083);
 		reporterIds.add(7841);
 		
-		try {
+		/*try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
 		}
 		catch(SQLException e) {
 			System.err.println("Failed to create connection to database: url " + this.databaseUrl +
 					"user " + this.user);
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	/**
@@ -211,9 +210,12 @@ public class DataController {
 	 * Reads data for specified antibodies from each patient from raw data.
 	 * @param antibodyIds	List of ids from antibodies as specified in table ArrayDesign for which information should
 	 * 						be retrieved from table Rawdata
+	 * @param header		List of mysql database column headers which should be included in statement
+	 * 						IMPORTANT header label (has/has not PD) and Patient_id are included by default
 	 * @return				List of RawDataMinimal elements
 	 */
-	public Hashtable<String, ArrayList<RawDataMini>> readMinimalRawData(java.util.List<Integer> antibodyIds) {
+	public Hashtable<String, ArrayList<RawDataMini>> readMinimalRawData(List<Integer> antibodyIds
+			,List<String> header) {
 		ResultSet data;
 		RawDataMini tmp;
 		Boolean isPatientIdFirst = true;
@@ -222,6 +224,7 @@ public class DataController {
 		Hashtable<String, ArrayList<RawDataMini>> rawData = null;
 		PreparedStatement statement = null;
 		String stmnt = "SELECT rd.Patient_id" +
+				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label "; /*
 				",rd.F635_Median" +
 				",rd.F635_Mean" +
 				",rd.F635_SD" +
@@ -235,9 +238,11 @@ public class DataController {
 				",rd.B532" +
 				",rd.B532_Median" +
 				",rd.B532_Mean" +
-				",rd.B532_SD " +
-				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label " +
-				"FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
+				",rd.B532_SD " +*/
+		for(String s : header)
+			stmnt += "," + s;
+		
+		stmnt += " FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
 				"	ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId)" +
 				"WHERE TRIM(LEADING ':' FROM TRIM(LEADING SUBSTRING_INDEX(rd.Bez, ':', 1) FROM SUBSTRING_INDEX(rd.Bez, '~', 2)))" +
 				"	IN (SELECT ad.DatabaseId FROM ArrayDesign AS ad WHERE idArrayDesign IN (";
@@ -356,4 +361,57 @@ public class DataController {
 		}
 	}
 	
+	/**
+	 * Intended for files being created by using select into outfile, does essentially the same as
+	 * readMinimalRawData just not directly from database but from file, order of column header needs
+	 * to be specified by user, though.
+	 * This method assumes semicolon separated columns
+	 * @TODO design statement which includes column headers (if possible, low priority)
+	 * @TODO change RawDataMini with method setting attribute based on header
+	 * 
+	 * @param header	ArrayList specifying header in order in which they appear in file 
+	 * @param path		Path to source file
+	 * 
+	 * @return
+	 */
+	public Hashtable<String, ArrayList<RawDataMini>> convertDatabaseExportToFeatureVector(ArrayList<String> header, String source) {
+		Hashtable<String, ArrayList<RawDataMini>> rawdata = null;
+		BufferedReader reader = null;
+		String line;
+		String[] attributes;
+		RawDataMini row;
+		
+		Boolean isPatientIdFirst = true;
+		
+		try {
+			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(source))));
+			rawdata = new Hashtable<String, ArrayList<RawDataMini>>();
+			//@TODO make here a line and not a row for each attribute
+			while((line = reader.readLine()) != null) {
+				attributes = line.split(";");
+				
+				if(!rawdata.keySet().contains(attributes[0] + "_" + isPatientIdFirst.toString()))
+					rawdata.put(attributes[0] + "_" + isPatientIdFirst.toString(), new ArrayList<RawDataMini>());
+				
+				row = new RawDataMini();
+				row.setPatientId(attributes[0] + "_" + isPatientIdFirst.toString());
+				row.setF635mean(Double.parseDouble(attributes[1]));
+				row.setLabel(attributes[15]);
+				rawdata.get(attributes[0] + "_" + isPatientIdFirst.toString()).add(row);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				reader.close();
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return rawdata;
+	}
 }
