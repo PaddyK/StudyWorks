@@ -1,5 +1,7 @@
 package data;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 import java.io.File;
 import java.io.FileWriter;
@@ -46,6 +48,16 @@ public class DataController {
 	 * Connection to mysql database. A global variable so it is instanciated only once. Very expensive. 
 	 */
 	Connection databaseConnection;
+	/**
+	 * Stores (so far) used header names of sql table
+	 * @TODO Implement this as sql query to dynamically get header information
+	 */
+	List<String> rawDataHeader;
+	/**
+	 * List of integers representing antibodies
+	 * @TODO should be dynamic
+	 */
+	List<Integer> reporterIds;
 	
 	/**
 	 * Constructor for class DataController. Takes a username and password.
@@ -57,6 +69,34 @@ public class DataController {
 		this.password = password;
 		this.jdbcConnectionString = "com.mysql.jdbc.Driver";
 		this.databaseUrl = "jdbc:mysql://localhost/StudyWorks";
+		this.rawDataHeader = new ArrayList<String>();
+		this.rawDataHeader.add("Patient_id");
+		this.rawDataHeader.add("F635_Median");
+		this.rawDataHeader.add("F635_Mean");
+		this.rawDataHeader.add("F635_SD");
+		this.rawDataHeader.add("B635");
+		this.rawDataHeader.add("B635_Median");
+		this.rawDataHeader.add("B635_Mean");
+		this.rawDataHeader.add("B635_SD");
+		this.rawDataHeader.add("F532_Median");
+		this.rawDataHeader.add("F532_Mean");
+		this.rawDataHeader.add("F532_SD");
+		this.rawDataHeader.add("B532");
+		this.rawDataHeader.add("B532_Median");
+		this.rawDataHeader.add("B532_Mean");
+		this.rawDataHeader.add("B532_SD ");
+		
+		reporterIds = new ArrayList<Integer>();
+		reporterIds.add(8327);
+		reporterIds.add(1890);
+		reporterIds.add(2158);
+		reporterIds.add(2591);
+		reporterIds.add(3240);
+		reporterIds.add(3921);
+		reporterIds.add(4079);
+		reporterIds.add(4834);
+		reporterIds.add(6083);
+		reporterIds.add(7841);
 		
 		try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
@@ -173,16 +213,18 @@ public class DataController {
 	 * 						be retrieved from table Rawdata
 	 * @return				List of RawDataMinimal elements
 	 */
-	public List<RawDataMini> readMinimalRawData(java.util.List<Integer> antibodyIds) {
+	public Hashtable<String, ArrayList<RawDataMini>> readMinimalRawData(java.util.List<Integer> antibodyIds) {
 		ResultSet data;
 		RawDataMini tmp;
-		List<RawDataMini> rawData = null;
+		Boolean isPatientIdFirst = true;
+		// Create a list of result sets for each unique patient id to be later able 
+		// to process them more precisely
+		Hashtable<String, ArrayList<RawDataMini>> rawData = null;
 		PreparedStatement statement = null;
-		String stmnt = "SELECT Patient_id" +
-				",sdr.Sample_source_name" +
+		String stmnt = "SELECT rd.Patient_id" +
 				",rd.F635_Median" +
 				",rd.F635_Mean" +
-				",F635_SD" +
+				",rd.F635_SD" +
 				",rd.B635" +
 				",rd.B635_Median" +
 				",rd.B635_Mean" +
@@ -193,24 +235,39 @@ public class DataController {
 				",rd.B532" +
 				",rd.B532_Median" +
 				",rd.B532_Mean" +
-				",rd.B532_SD FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
-				"	ON rd.Patient_id LIKE CONCAT(sdr.PatientId, '%')" +
-				"WHERE rd.ID IN (SELECT ad.DatabaseId FROM ArrayDesign WHERE idArrayDesign IN (";
+				",rd.B532_SD " +
+				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label " +
+				"FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
+				"	ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId)" +
+				"WHERE TRIM(LEADING ':' FROM TRIM(LEADING SUBSTRING_INDEX(rd.Bez, ':', 1) FROM SUBSTRING_INDEX(rd.Bez, '~', 2)))" +
+				"	IN (SELECT ad.DatabaseId FROM ArrayDesign AS ad WHERE idArrayDesign IN (";
 		
-		for(int i : antibodyIds)
+		for(int i = 0; i < antibodyIds.size(); i++)
 			stmnt += "?,";
+		
 		// Remove trailing comma
 		stmnt = stmnt.substring(0, stmnt.length() - 2) + "));";
 		
 		try {
 			statement = (PreparedStatement)this.databaseConnection.prepareStatement(stmnt);
+			
+			// Add reporterIds aka antibody ids to statement
 			for(int i = 0; i < antibodyIds.size(); i++)
 				statement.setInt(i, antibodyIds.get(i));
+			
 			data = statement.executeQuery();
-			rawData = new ArrayList<RawDataMini>();
+			rawData = new Hashtable<String, ArrayList<RawDataMini>>();
+			
 			while(data.next()) {
 				tmp = new RawDataMini();
-				tmp.setPatientId(data.getString("Patient_id"));
+				// In each .gpr file are two entries for each antibody. SQL statement returns
+				// results ordered after patient id and id string of antibody. This means result
+				// consists (in case of 10 antibodies) of a block of 20 rows for each patient. This
+				// block in turn consists of 10 blocks. Those then blocks consist of two rows containing
+				// queried information for the same antibody for the same patient.
+				// Information for the same antibody are successive (because of the order) thus the
+				// isPatientIdFirst suffix. This makes the different anibody information later distingishuable
+				tmp.setPatientId(data.getString("Patient_id") + "_" + isPatientIdFirst.toString());
 				tmp.setHasParkinson((data.getString("").toLowerCase().contains("pd"))? "yes" : "no");
 				tmp.setF635median(data.getInt("F635_Median"));
 				tmp.setF635mean(data.getInt("F635_Mean"));
@@ -227,7 +284,13 @@ public class DataController {
 				tmp.setB532mean(data.getInt("B532_Mean"));
 				tmp.setB532sd(data.getInt("B532_SD"));
 				
-				rawData.add(tmp);
+				// Check if key exists, if not create new array list
+				if(!rawData.keySet().contains(tmp.getPatientId()))
+					rawData.put(tmp.getPatientId(), new ArrayList<RawDataMini>());
+				// Add entry to array list
+				rawData.get(tmp.getPatientId()).add(tmp);
+				
+				isPatientIdFirst = !isPatientIdFirst;
 			}
 		} 
 		catch (SQLException e) {
@@ -249,14 +312,36 @@ public class DataController {
 	 * @param destination	Path to destination file
 	 * @param data			Set of raw data lines from database
 	 */
-	public void writeRawDataMiniToFile(String destination, List<RawDataMini> data) {
+	public void writeRawDataMiniToFile(String destination, Hashtable <String, ArrayList<RawDataMini>> data, 
+			List<String> header, List<Integer> reporterIds) {
 		File dest = new File(destination);
 		FileWriter writer = null;
+		String patientId = "";
+		String line = "";
+		List<RawDataMini> records;
+		Enumeration<String> keys = data.keys();
+		
+		// Create header line
+		// @TODO this is not working at the moment as antibodies are ordered alphabetically and not as specified
+		// with reporter Id --> get ids and append them
+		for(int id : reporterIds) 
+			for(String h : header)
+				line += id + "_" + h + ";";
 		
 		try {
 			writer = new FileWriter(dest.getAbsolutePath());
-			for(RawDataMini d : data)
-				writer.append(d.toString() + System.getProperty("line.separator"));
+			while(keys.hasMoreElements()) {
+				patientId = keys.nextElement();
+				records = data.get(patientId);
+				
+				for(RawDataMini d : records) {
+					line = patientId;					
+					for(String h : header)
+						line += ";" + d.getAttributeFromHeader(h);				
+				}
+				writer.append(line + System.getProperty("line.separator"));
+				line = "";
+			}
 		}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -270,4 +355,5 @@ public class DataController {
 			}
 		}
 	}
+	
 }
