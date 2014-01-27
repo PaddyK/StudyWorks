@@ -329,18 +329,20 @@ public class DataController {
 		// Create header line
 		// @TODO this is not working at the moment as antibodies are ordered alphabetically and not as specified
 		// with reporter Id --> get ids and append them
+		line = "PatientId;Label";
 		for(int id : reporterIds) 
 			for(String h : header)
-				line += id + "_" + h + ";";
+				line +=  ";" + id + "_" + h;
 		
 		try {
 			writer = new FileWriter(dest.getAbsolutePath());
+			writer.append(line + System.getProperty("line.separator"));
 			while(keys.hasMoreElements()) {
 				patientId = keys.nextElement();
 				records = data.get(patientId);
+				line = patientId + ";" + records.get(0).getLabel();	
 				
-				for(RawDataMini d : records) {
-					line = patientId;					
+				for(RawDataMini d : records) {				
 					for(String h : header)
 						line += ";" + d.getAttributeFromHeader(h);				
 				}
@@ -398,6 +400,9 @@ public class DataController {
 				row.setF635mean(Double.parseDouble(attributes[1]));
 				row.setLabel(attributes[15]);
 				rawdata.get(attributes[0] + "_" + isPatientIdFirst.toString()).add(row);
+				
+				// Toggle lines
+				isPatientIdFirst = !isPatientIdFirst;
 			}
 		}
 		catch(Exception e) {

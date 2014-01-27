@@ -188,6 +188,7 @@ public class RawDataMini {
 	public String getAttributeFromHeader(String header) {
 		String ret = null;
 		switch(header) {
+		// Those two need only be added once for each feature vector
 		case "Patient_id" : ret = this.patientId;
 			break;
 		case "Label" : ret = this.label;

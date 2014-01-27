@@ -21,7 +21,7 @@ public class Program {
 	public Program() {
 		this.rawDataHeader = new ArrayList<String>();
 		this.rawDataHeader.add("F635_Mean");
-		this.rawDataHeader.add("Patient_id");
+		//this.rawDataHeader.add("Patient_id");
 		
 
 		reporterIds = new ArrayList<Integer>();
