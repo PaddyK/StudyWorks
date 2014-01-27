@@ -224,7 +224,8 @@ public class DataController {
 		Hashtable<String, ArrayList<RawDataMini>> rawData = null;
 		PreparedStatement statement = null;
 		String stmnt = "SELECT rd.Patient_id" +
-				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label "; /*
+				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label " +
+				",rd.Bez"; /*
 				",rd.F635_Median" +
 				",rd.F635_Mean" +
 				",rd.F635_SD" +
@@ -240,7 +241,7 @@ public class DataController {
 				",rd.B532_Mean" +
 				",rd.B532_SD " +*/
 		for(String s : header)
-			stmnt += "," + s;
+			stmnt += ",rd." + s;
 		
 		stmnt += " FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
 				"	ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId)" +

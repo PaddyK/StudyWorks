@@ -224,4 +224,43 @@ public class RawDataMini {
 		}
 		return ret;
 	}
+	
+	public void setAttributeFromHeader(String header, Object value) {
+
+		switch(header) {
+		// Those two need only be added once for each feature vector
+		case "Patient_id" : this.patientId = (String)value;
+			break;
+		case "Label" : this.label = (String)label;
+			break;
+		case "F635_Median" : this.f635median = (double)value;
+			break;
+		case "F635_Mean" : this.f635mean = (double)value;
+			break;
+		case "F635_SD" : this.f635sd = (double)value;
+			break;
+		case "B635" : this.b635 = (double)value;
+			break;
+		case "B635_Median" : this.b635median = (double)value;
+			break;
+		case "B635_Mean" : this.b635mean = (double)value;
+			break;
+		case "B635_SD" : this.b635sd = (double)value;
+			break;
+		case "F532_Median" : this.f532median = (double)value;
+			break;
+		case "F532_Mean" : this.f532mean = (double)value;
+			break;
+		case "F532_SD" : this.f532sd = (double)value;
+			break;
+		case "B532" : this.b532 = (double)value;
+			break;
+		case "B532_Median" : this.b532median = (double)value;
+			break;
+		case "B532_Mean" : this.b532mean = (double)value;
+			break;
+		case "B532_SD" : this.b532sd = (double)value;
+			break;
+		}
+	}
 }
