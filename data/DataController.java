@@ -221,6 +221,7 @@ public class DataController {
 		// to process them more precisely
 		Hashtable<String, ArrayList<RawDataMini>> rawData = null;
 		PreparedStatement statement = null;
+		/** @TODO dynamically create select part */
 		String stmnt = "SELECT rd.Patient_id" +
 				",rd.F635_Median" +
 				",rd.F635_Mean" +
