@@ -3,7 +3,11 @@ package main;
 import java.util.ArrayList;
 import java.util.List;
 
+import classification.WekaController;
+
 import data.DataController;
+
+import weka.core.Instances;
 
 public class Program {
 
@@ -19,7 +23,7 @@ public class Program {
 	List<Integer> reporterIds;
 	
 	public Program() {
-		this.rawDataHeader = new ArrayList<String>();
+		/*this.rawDataHeader = new ArrayList<String>();
 		this.rawDataHeader.add("F635_Mean");
 		//this.rawDataHeader.add("Patient_id");
 		
@@ -38,7 +42,11 @@ public class Program {
 		
 		DataController datactrl = new DataController("patrick", "");
 		datactrl.writeRawDataMiniToFile("C:\\DATATEST.csv", datactrl.convertDatabaseExportToFeatureVector(rawDataHeader, "G:\\10MOST2.csv"),
-				rawDataHeader, reporterIds);
+				rawDataHeader, reporterIds);*/
+		WekaController wc = new WekaController();
+		wc.readInstancesFromCSV("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/" +
+				"10_most_prevelant.csv");
+		wc.runTenFoldCrossValidation("weka.classifiers.trees.J48", new String[]{"-U"});
 	}
 	
 	

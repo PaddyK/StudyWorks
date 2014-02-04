@@ -315,7 +315,9 @@ public class DataController {
 	}
 	
 	/**
-	 * Writes the data of a given set of raw data items to a csv file
+	 * Writes the data of a given set of raw data items to a csv file. Method readInstancesFromCSV
+	 * assumes first attribute in csv file is patientid, second attribute is label!!!
+	 * {@link}WekaController.java
 	 * @param destination	Path to destination file
 	 * @param data			Set of raw data lines from database
 	 */
