@@ -1,14 +1,10 @@
 package data;
 
-public class RawDataMini {
+public class RawDataMini implements Comparable<RawDataMini>{
 	/**
 	 * Patient Id, identifies patient
 	 */
 	protected String patientId;
-	/**
-	 * Nominal feature, yes --> has parkinson, no --> no parkinson
-	 */
-	protected String hasParkinson;
 	/**
 	 * Median of pixel intensities for wavelength of 635nm
 	 */	
@@ -69,19 +65,22 @@ public class RawDataMini {
 	 * Label for data, yes patient has parkinson, no patient does not have parkinson
 	 */
 	protected String label;
+	/**
+	 * Identifier of Antibody, database identifier NOT reporter ID
+	 */
+	protected String antibodyId;
 	
+	public String getAntibodyId() {
+		return antibodyId;
+	}
+	public void setAntibodyId(String antibodyId) {
+		this.antibodyId = antibodyId;
+	}
 	public String getPatientId() {
 		return patientId;
 	}
 	public void setPatientId(String patientId) {
 		this.patientId = patientId;
-	}
-	
-	public String getHasParkinson() {
-		return hasParkinson;
-	}
-	public void setHasParkinson(String hasParkinson) {
-		this.hasParkinson = hasParkinson;
 	}
 	public double getF635median() {
 		return f635median;
@@ -182,7 +181,7 @@ public class RawDataMini {
 	public String toString() {
 		return patientId + "\t" + f635mean + "\t" + f635median + "\t" + f635sd + "\t" + b635 + "\t" + b635mean + "\t" +
 				b635median + "\t" + b635sd + "\t" + f532mean + "\t" + f532median + "\t" + f532sd + "\t" + b532 + "\t" +
-				b532mean + "\t" + b532median + "\t" + b532sd + "\t" + hasParkinson;
+				b532mean + "\t" + b532median + "\t" + b532sd + "\t" + label + "\t" + antibodyId;
 	}
 	
 	public String getAttributeFromHeader(String header) {
@@ -192,6 +191,8 @@ public class RawDataMini {
 		case "Patient_id" : ret = this.patientId;
 			break;
 		case "Label" : ret = this.label;
+			break;
+		case "Bez" : ret = this.antibodyId;
 			break;
 		case "F635_Median" : ret = "" + this.f635median;
 			break;
@@ -231,9 +232,11 @@ public class RawDataMini {
 		// Those two need only be added once for each feature vector
 		case "Patient_id" : this.patientId = (String)value;
 			break;
-		case "Label" : this.label = (String)label;
+		case "Label" : this.label = (String)value;
 			break;
 		case "F635_Median" : this.f635median = (double)value;
+			break;
+		case "Bez" : this.antibodyId = (String)value;
 			break;
 		case "F635_Mean" : this.f635mean = (double)value;
 			break;
@@ -262,5 +265,21 @@ public class RawDataMini {
 		case "B532_SD" : this.b532sd = (double)value;
 			break;
 		}
+	}
+	@Override
+	public int compareTo(RawDataMini arg0) {
+		int own = 0,
+			other = 0;
+		for(int i = 0; i < this.antibodyId.length(); i++)
+			own += (int)this.antibodyId.charAt(i);
+		for(int i = 0; i < arg0.antibodyId.length(); i++)
+			other = (int)arg0.antibodyId.charAt(i);
+		
+		if(own > other)
+			return 1;
+		else if(own < other)
+			return -1;
+		else
+			return 0;
 	}
 }

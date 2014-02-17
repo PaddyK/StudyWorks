@@ -1,5 +1,7 @@
 package data;
+import java.text.CollationElementIterator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -68,43 +70,16 @@ public class DataController {
 		this.password = password;
 		this.jdbcConnectionString = "com.mysql.jdbc.Driver";
 		this.databaseUrl = "jdbc:mysql://localhost/StudyWorks";
-		this.rawDataHeader = new ArrayList<String>();
-		this.rawDataHeader.add("Patient_id");
-		this.rawDataHeader.add("F635_Median");
-		this.rawDataHeader.add("F635_Mean");
-		this.rawDataHeader.add("F635_SD");
-		this.rawDataHeader.add("B635");
-		this.rawDataHeader.add("B635_Median");
-		this.rawDataHeader.add("B635_Mean");
-		this.rawDataHeader.add("B635_SD");
-		this.rawDataHeader.add("F532_Median");
-		this.rawDataHeader.add("F532_Mean");
-		this.rawDataHeader.add("F532_SD");
-		this.rawDataHeader.add("B532");
-		this.rawDataHeader.add("B532_Median");
-		this.rawDataHeader.add("B532_Mean");
-		this.rawDataHeader.add("B532_SD ");
 		
-		reporterIds = new ArrayList<Integer>();
-		reporterIds.add(8327);
-		reporterIds.add(1890);
-		reporterIds.add(2158);
-		reporterIds.add(2591);
-		reporterIds.add(3240);
-		reporterIds.add(3921);
-		reporterIds.add(4079);
-		reporterIds.add(4834);
-		reporterIds.add(6083);
-		reporterIds.add(7841);
 		
-		/*try {
+		try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
 		}
 		catch(SQLException e) {
 			System.err.println("Failed to create connection to database: url " + this.databaseUrl +
 					"user " + this.user);
 			e.printStackTrace();
-		}*/
+		}
 	}
 
 	/**
@@ -214,7 +189,7 @@ public class DataController {
 	 * 						IMPORTANT header label (has/has not PD) and Patient_id are included by default
 	 * @return				List of RawDataMinimal elements
 	 */
-	public Hashtable<String, ArrayList<RawDataMini>> readMinimalRawData(List<Integer> antibodyIds
+	public Hashtable<String, ArrayList<RawDataMini>> readMinimalRawDataFromDb(List<Integer> antibodyIds
 			,List<String> header) {
 		ResultSet data;
 		RawDataMini tmp;
@@ -226,45 +201,40 @@ public class DataController {
 		/** @TODO dynamically create select part */
 		String stmnt = "SELECT rd.Patient_id" +
 				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label " +
-				",rd.Bez"; /*
-				",rd.F635_Median" +
-				",rd.F635_Mean" +
-				",rd.F635_SD" +
-				",rd.B635" +
-				",rd.B635_Median" +
-				",rd.B635_Mean" +
-				",rd.B635_SD" +
-				",rd.F532_Median" +
-				",rd.F532_Mean" +
-				",rd.F532_SD " +
-				",rd.B532" +
-				",rd.B532_Median" +
-				",rd.B532_Mean" +
-				",rd.B532_SD " +*/
+				",ards.DatabaseId";
 		for(String s : header)
 			stmnt += ",rd." + s;
 		
-		stmnt += " FROM RawData AS rd INNER JOIN SamleAndDataRelationship as sdr " +
-				"	ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId)" +
-				"WHERE TRIM(LEADING ':' FROM TRIM(LEADING SUBSTRING_INDEX(rd.Bez, ':', 1) FROM SUBSTRING_INDEX(rd.Bez, '~', 2)))" +
-				"	IN (SELECT ad.DatabaseId FROM ArrayDesign AS ad WHERE idArrayDesign IN (";
+		stmnt += " FROM RawData AS rd INNER JOIN SamleAndDataRelationship AS sdr " +
+					"ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId) " +
+                    "INNER JOIN ArrayDesign ards ON rd.Bez LIKE CONCAT('%', ards.DatabaseId, '%') " +
+				"WHERE " +
+                    "(sdr.Sample_source_name LIKE 'PD%' OR sdr.Sample_source_name LIKE 'CO%' OR sdr.Sample_source_name LIKE 'CY%') " +
+                    "AND ards.idArrayDesign IN (";
 		
 		for(int i = 0; i < antibodyIds.size(); i++)
 			stmnt += "?,";
 		
 		// Remove trailing comma
-		stmnt = stmnt.substring(0, stmnt.length() - 2) + "));";
-		
+		stmnt = stmnt.substring(0, stmnt.length() - 1) + ") ORDER BY rd.Patient_id;";
+
 		try {
+			stmnt = "SELECT rd.Patient_id,IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label ,ards.DatabaseId,rd.F635_Mean FROM RawData AS rd INNER JOIN SamleAndDataRelationship AS sdr ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId) INNER JOIN ArrayDesign ards ON rd.Bez LIKE CONCAT('%', ards.DatabaseId, '%') WHERE (sdr.Sample_source_name LIKE 'PD%' OR sdr.Sample_source_name LIKE 'CO%' OR sdr.Sample_source_name LIKE 'CY%') AND ards.idArrayDesign IN (8327, 7841) ORDER BY rd.Patient_id;";
 			statement = (PreparedStatement)this.databaseConnection.prepareStatement(stmnt);
-			
+			System.out.println(statement);		
 			// Add reporterIds aka antibody ids to statement
-			for(int i = 0; i < antibodyIds.size(); i++)
-				statement.setInt(i, antibodyIds.get(i));
-			
+//			for(int i = 0; i < antibodyIds.size(); i++)
+//				statement.setInt(i + 1, antibodyIds.get(i));
+
+			//<message>
+				System.out.println("Begin querying database. This may take some time...");
+			//</message>
 			data = statement.executeQuery();
+			//<message>
+				System.out.println("Querying databse completed");
+			//</message>
 			rawData = new Hashtable<String, ArrayList<RawDataMini>>();
-			
+
 			while(data.next()) {
 				tmp = new RawDataMini();
 				// In each .gpr file are two entries for each antibody. SQL statement returns
@@ -275,25 +245,16 @@ public class DataController {
 				// Information for the same antibody are successive (because of the order) thus the
 				// isPatientIdFirst suffix. This makes the different anibody information later distingishuable
 				tmp.setPatientId(data.getString("Patient_id") + "_" + isPatientIdFirst.toString());
-				tmp.setHasParkinson((data.getString("").toLowerCase().contains("pd"))? "yes" : "no");
-				tmp.setF635median(data.getInt("F635_Median"));
-				tmp.setF635mean(data.getInt("F635_Mean"));
-				tmp.setF635sd(data.getInt("F635_SD"));
-				tmp.setB635(data.getInt("B635"));
-				tmp.setB635median(data.getInt("B635_Median"));
-				tmp.setB635mean(data.getInt("B635_Mean"));
-				tmp.setB635sd(data.getInt("B635_SD"));
-				tmp.setF532median(data.getInt("F532_Median"));
-				tmp.setF532median(data.getInt("F532_Mean"));
-				tmp.setF532median(data.getInt("F532_SD"));
-				tmp.setB532(data.getInt("B532"));
-				tmp.setB532median(data.getInt("B532_Median"));
-				tmp.setB532mean(data.getInt("B532_Mean"));
-				tmp.setB532sd(data.getInt("B532_SD"));
+				tmp.setLabel(data.getString("Label"));
+				tmp.setAntibodyId(data.getString("DatabaseId"));
+				
+				for(String hdr : header)
+					tmp.setAttributeFromHeader(hdr, (double)data.getInt(hdr));
 				
 				// Check if key exists, if not create new array list
-				if(!rawData.keySet().contains(tmp.getPatientId()))
+				if(!rawData.keySet().contains(tmp.getPatientId())) {
 					rawData.put(tmp.getPatientId(), new ArrayList<RawDataMini>());
+				}
 				// Add entry to array list
 				rawData.get(tmp.getPatientId()).add(tmp);
 				
@@ -327,29 +288,39 @@ public class DataController {
 		FileWriter writer = null;
 		String patientId = "";
 		String line = "";
+		String separatorSymbol = "\t";
 		List<RawDataMini> records;
 		Enumeration<String> keys = data.keys();
 		
 		// Create header line
 		// @TODO this is not working at the moment as antibodies are ordered alphabetically and not as specified
 		// with reporter Id --> get ids and append them
-		line = "PatientId;Label";
-		for(int id : reporterIds) 
+		line = "PatientId" + separatorSymbol + "Label";
+		ArrayList<RawDataMini> forHeader = data.get(data.keys().nextElement());
+		Collections.sort(forHeader);
+		for(RawDataMini mini : forHeader) 
 			for(String h : header)
-				line +=  ";" + id + "_" + h;
-		
+				line +=  separatorSymbol + mini.getAntibodyId() + "_" + h;
+		System.out.println(line);
+			
 		try {
 			writer = new FileWriter(dest.getAbsolutePath());
 			writer.append(line + System.getProperty("line.separator"));
 			while(keys.hasMoreElements()) {
 				patientId = keys.nextElement();
 				records = data.get(patientId);
-				line = patientId + ";" + records.get(0).getLabel();	
+				
+				Collections.sort(records);
+				
+				line = patientId + separatorSymbol + records.get(0).getLabel();	
 				
 				for(RawDataMini d : records) {				
-					for(String h : header)
-						line += ";" + d.getAttributeFromHeader(h);				
+					for(String h : header) {
+						line += separatorSymbol + d.getAttributeFromHeader(h);		
+						System.out.println(d.getAntibodyId());
+					}
 				}
+				System.out.println();
 				writer.append(line + System.getProperty("line.separator"));
 				line = "";
 			}
@@ -401,8 +372,9 @@ public class DataController {
 				
 				row = new RawDataMini();
 				row.setPatientId(attributes[0] + "_" + isPatientIdFirst.toString());
-				row.setF635mean(Double.parseDouble(attributes[1]));
-				row.setLabel(attributes[15]);
+				row.setF635mean(Double.parseDouble(attributes[3]));
+				row.setLabel(attributes[2]);
+				row.setAntibodyId(attributes[1]);
 				rawdata.get(attributes[0] + "_" + isPatientIdFirst.toString()).add(row);
 				
 				// Toggle lines
@@ -422,5 +394,48 @@ public class DataController {
 		}
 		
 		return rawdata;
+	}
+	
+	/**
+	 * Takes a result of data and calculates for each array list, i.e. for each records found for a patientID
+	 * the mean of each specified feature.
+	 * @param header	Header strings for each feature
+	 * @param data		data, either from database or from database export
+	 */
+	public void calculateMeanForFeaturesOfSamePatient(ArrayList<String> header, Hashtable <String
+			,ArrayList<RawDataMini>> data) {
+		ArrayList<RawDataMini> patientData;
+		RawDataMini newRecord;
+		Enumeration<String> num = data.keys();
+		double mean = 0;
+		
+		while(num.hasMoreElements())
+		{
+			patientData = data.get(num.nextElement());
+			
+			newRecord = new RawDataMini();
+			newRecord.setPatientId(patientData.get(0).getPatientId());
+			newRecord.setLabel(patientData.get(0).getLabel());
+			newRecord.setAntibodyId(patientData.get(0).getAntibodyId());
+			
+			for(String hdr : header) {
+				for(RawDataMini record : patientData) 
+					mean += Double.parseDouble(record.getAttributeFromHeader(hdr));
+				
+				newRecord.setAttributeFromHeader(hdr, mean/patientData.size());
+			}
+			patientData.clear();
+			patientData.add(newRecord);				
+		}
+	}
+	
+	public void closeConnection() {
+		try {
+			this.databaseConnection.close();
+		}
+		catch(SQLException e) {
+			System.err.println("Error on closing connection to database!\n");
+			e.printStackTrace();
+		}
 	}
 }
