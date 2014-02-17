@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -18,6 +20,8 @@ import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+
 import com.mysql.jdbc.PreparedStatement;
 
 /**
@@ -59,6 +63,10 @@ public class DataController {
 	 * @TODO should be dynamic
 	 */
 	List<Integer> reporterIds;
+	/**
+	 * List of Strings denoting column header of table containing data processed with protoArraya
+	*/
+	List<String> protoHeader;
 	
 	/**
 	 * Constructor for class DataController. Takes a username and password.
@@ -71,6 +79,27 @@ public class DataController {
 		this.jdbcConnectionString = "com.mysql.jdbc.Driver";
 		this.databaseUrl = "jdbc:mysql://localhost/StudyWorks";
 		
+		protoHeader = new ArrayList<String>();
+		protoHeader.add("PatientId");
+		protoHeader.add("DatabaseId");
+		protoHeader.add("UltimateOrfId");
+		protoHeader.add("ArrayId");
+		protoHeader.add("Block");
+		protoHeader.add("Reihe");
+		protoHeader.add("Spalte");
+		protoHeader.add("ProteinAmount");
+		protoHeader.add("LaserSignal");
+		protoHeader.add("Background");
+		protoHeader.add("SignalUsed");
+		protoHeader.add("SignalRank");
+		protoHeader.add("ZFactor");
+		protoHeader.add("ZScore");
+		protoHeader.add("CiPValue");
+		protoHeader.add("Cv");
+		protoHeader.add("SignificanceCal");
+		protoHeader.add("GenePixFlags");
+		protoHeader.add("Description");
+		
 		
 		try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
@@ -82,6 +111,7 @@ public class DataController {
 		}
 	}
 
+	
 	/**
 	 * Reads all .gpr files from a directory into mysql database and includes identifier from sample name
 	 * @param path						path to directory containing .gpr files
@@ -128,6 +158,7 @@ public class DataController {
 		}
 	}
 
+	
 	/**
 	 * Reads with filePath specified .gpr file into database
 	 * @param filePath					Path to gpr file
@@ -157,6 +188,7 @@ public class DataController {
 		}
 	}
 
+	
 	/**
 	 * Reads all records from the gpr file with which reader is initialized into RawData table
 	 * @param reader	BufferedReader initialized with gpr file
@@ -180,6 +212,7 @@ public class DataController {
 			e.printStackTrace();
 		}
 	}
+	
 	
 	/**
 	 * Reads data for specified antibodies from each patient from raw data.
@@ -275,6 +308,7 @@ public class DataController {
 		return rawData;		
 	}
 	
+	
 	/**
 	 * Writes the data of a given set of raw data items to a csv file. Method readInstancesFromCSV
 	 * assumes first attribute in csv file is patientid, second attribute is label!!!
@@ -338,6 +372,7 @@ public class DataController {
 		}
 	}
 	
+	
 	/**
 	 * Intended for files being created by using select into outfile, does essentially the same as
 	 * readMinimalRawData just not directly from database but from file, order of column header needs
@@ -365,7 +400,7 @@ public class DataController {
 			rawdata = new Hashtable<String, ArrayList<RawDataMini>>();
 			//@TODO make here a line and not a row for each attribute
 			while((line = reader.readLine()) != null) {
-				attributes = line.split(";");
+				attributes = line.split(",");
 				
 				if(!rawdata.keySet().contains(attributes[0] + "_" + isPatientIdFirst.toString()))
 					rawdata.put(attributes[0] + "_" + isPatientIdFirst.toString(), new ArrayList<RawDataMini>());
@@ -395,6 +430,7 @@ public class DataController {
 		
 		return rawdata;
 	}
+	
 	
 	/**
 	 * Takes a result of data and calculates for each array list, i.e. for each records found for a patientID
@@ -427,6 +463,102 @@ public class DataController {
 			patientData.clear();
 			patientData.add(newRecord);				
 		}
+	}
+	
+	/**
+	 * Assumes multiple files to import. Therefore path to directory containing analyzed files and
+	 * NO OTHER files is given.
+	 * 
+	 * @param sourceFolder	Path to folder containing result files
+	 */
+	public void importProtoArrayProcessedDataInDatabase(String sourceFolder) {
+		File[] children;		
+		File dir = new File(sourceFolder);
+		
+		if(!dir.isDirectory() || !dir.exists())
+			System.err.println("Path" + sourceFolder + " is not a directory or does not exist!");
+		else {
+			children = dir.listFiles();
+			int i = 1;
+			for(File child : children){	
+				System.out.print("Importing file " + i++ + " ...");
+				importProtoArrayProcessedDataInDatabase(child);
+				System.out.println("\tFinish!");
+			}
+		}
+	}
+	
+	/**
+	 * Adds the content of the result file created by PotoArray to database. This file has to be
+	 * tab separated
+	 * 
+	 * @param file	File containing result data
+	 */
+	public void importProtoArrayProcessedDataInDatabase(File file) {
+		Statement statement;
+		File imprt = createTemporaryFileForImport(file);
+		String stmnt = "LOAD DATA LOCAL INFILE '" + imprt.getAbsolutePath() + "' INTO TABLE " +
+				"ProtoArrayProcessedData FIELDS TERMINATED BY ';' (";
+		for(String s : this.protoHeader)
+			stmnt += s + ",";
+		stmnt = stmnt.substring(0, stmnt.length() - 1) + ");";
+
+		try{
+			statement = this.databaseConnection.createStatement();
+			statement.execute(stmnt);
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+		imprt.delete();
+	}
+	
+	/**
+	 * Removes leading lines from data in order to be able to import it via LOCAL INFILE and replaces
+	 * tabs with semicolon
+	 * @param file
+	 * @return
+	 */
+	private File createTemporaryFileForImport(File file) {
+		String line;
+		String id;
+		
+		int offset = 63;
+		BufferedReader reader = null;
+		FileWriter writer = null;
+		File tmp = new File("/tmp/tmp_db_import.csv");
+		Pattern pattern = Pattern.compile("GSM\\d+");
+		Matcher matcher = pattern.matcher(file.getName());
+		matcher.find();
+		id = matcher.group();
+		try {
+			writer = new FileWriter(tmp);
+			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(file))));
+			
+			while(offset-- > 0 && reader.readLine() != null);
+			
+			while((line = reader.readLine()) != null) {
+				line = id +";" + line.replaceAll("\\s+", ";");
+				writer.append(line + System.getProperty("line.separator"));
+			}			
+		}
+		catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				writer.close();
+				reader.close();
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return tmp;
 	}
 	
 	public void closeConnection() {

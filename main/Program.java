@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,9 +62,9 @@ public class Program {
 		DataController datactrl = new DataController("patrick", "");
 		//data = datactrl.readMinimalRawDataFromDb(reporterIds, rawDataHeader);
 		
-		data = datactrl.convertDatabaseExportToFeatureVector(rawDataHeader, "/mnt/data/Mean_of_10_most_significant.csv");
+		data = datactrl.convertDatabaseExportToFeatureVector(rawDataHeader, "/home/patrick/Desktop/export.csv");
 		
-		datactrl.writeRawDataMiniToFile("/mnt/data/Mean_of_10_most_significant_vector.csv", data, rawDataHeader, reporterIds);
+		datactrl.writeRawDataMiniToFile("/home/patrick/Desktop/ProtoArrayVector.csv", data, rawDataHeader, reporterIds);
 //		Object[] tmp = data.keySet().toArray();
 //		String[] keys = new String[tmp.length];
 //		
@@ -81,6 +82,9 @@ public class Program {
 		// wc.readInstancesFromCSV("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/" +
 				// "10_most_prevelant.csv");
 		// wc.runTenFoldCrossValidation("weka.classifiers.trees.J48", new String[]{"-U"});
+		
+		//datactrl.importProtoArrayProcessedDataInDatabase("/mnt/data/Study_Works_blob/antibody/ProtoArrayAnalyzedData/PD vs NPC/");
+		
 		datactrl.closeConnection();
 	}
 	
