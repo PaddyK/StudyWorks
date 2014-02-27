@@ -252,12 +252,11 @@ public class DataController {
 		stmnt = stmnt.substring(0, stmnt.length() - 1) + ") ORDER BY rd.Patient_id;";
 
 		try {
-			stmnt = "SELECT rd.Patient_id,IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label ,ards.DatabaseId,rd.F635_Mean FROM RawData AS rd INNER JOIN SamleAndDataRelationship AS sdr ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId) INNER JOIN ArrayDesign ards ON rd.Bez LIKE CONCAT('%', ards.DatabaseId, '%') WHERE (sdr.Sample_source_name LIKE 'PD%' OR sdr.Sample_source_name LIKE 'CO%' OR sdr.Sample_source_name LIKE 'CY%') AND ards.idArrayDesign IN (8327, 7841) ORDER BY rd.Patient_id;";
+//			stmnt = "SELECT rd.Patient_id,IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label ,ards.DatabaseId,rd.F635_Mean FROM RawData AS rd INNER JOIN SamleAndDataRelationship AS sdr ON rd.Patient_id LIKE TRIM(TRAILING ' 1' FROM sdr.PatientId) INNER JOIN ArrayDesign ards ON rd.Bez LIKE CONCAT('%', ards.DatabaseId, '%') WHERE (sdr.Sample_source_name LIKE 'PD%' OR sdr.Sample_source_name LIKE 'CO%' OR sdr.Sample_source_name LIKE 'CY%') AND ards.idArrayDesign IN (8327, 7841) ORDER BY rd.Patient_id;";
 			statement = (PreparedStatement)this.databaseConnection.prepareStatement(stmnt);
-			System.out.println(statement);		
 			// Add reporterIds aka antibody ids to statement
-//			for(int i = 0; i < antibodyIds.size(); i++)
-//				statement.setInt(i + 1, antibodyIds.get(i));
+			for(int i = 0; i < antibodyIds.size(); i++)
+				statement.setInt(i + 1, antibodyIds.get(i));
 
 			//<message>
 				System.out.println("Begin querying database. This may take some time...");
@@ -335,7 +334,6 @@ public class DataController {
 		for(RawDataMini mini : forHeader) 
 			for(String h : header)
 				line +=  separatorSymbol + mini.getAntibodyId() + "_" + h;
-		System.out.println(line);
 			
 		try {
 			writer = new FileWriter(dest.getAbsolutePath());
@@ -348,13 +346,12 @@ public class DataController {
 				
 				line = patientId + separatorSymbol + records.get(0).getLabel();	
 				
-				for(RawDataMini d : records) {				
+				for(RawDataMini d : records) {		
+//					System.out.println(d.getSet() + "\t" + records.size());
 					for(String h : header) {
-						line += separatorSymbol + d.getAttributeFromHeader(h);		
-						System.out.println(d.getAntibodyId());
+						line += separatorSymbol + d.getAttributeFromHeader(h);
 					}
 				}
-				System.out.println();
 				writer.append(line + System.getProperty("line.separator"));
 				line = "";
 			}
@@ -377,7 +374,7 @@ public class DataController {
 	 * Intended for files being created by using select into outfile, does essentially the same as
 	 * readMinimalRawData just not directly from database but from file, order of column header needs
 	 * to be specified by user, though.
-	 * This method assumes semicolon separated columns
+	 * This method assumes semicolon, comma or tab separated columns
 	 * @TODO design statement which includes column headers (if possible, low priority)
 	 * @TODO change RawDataMini with method setting attribute based on header
 	 * 
@@ -386,11 +383,14 @@ public class DataController {
 	 * 
 	 * @return
 	 */
-	public Hashtable<String, ArrayList<RawDataMini>> convertDatabaseExportToFeatureVector(ArrayList<String> header, String source) {
+	public Hashtable<String, ArrayList<RawDataMini>> convertDatabaseExportToFeatureVector(String source) {
 		Hashtable<String, ArrayList<RawDataMini>> rawdata = null;
 		BufferedReader reader = null;
+		String regex = ",|;|\t";
+
 		String line;
 		String[] attributes;
+		String[] header;
 		RawDataMini row;
 		
 		Boolean isPatientIdFirst = true;
@@ -398,22 +398,36 @@ public class DataController {
 		try {
 			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(source))));
 			rawdata = new Hashtable<String, ArrayList<RawDataMini>>();
+			
+			line = reader.readLine();
+			if(line != null)
+				header = line.split(regex);
+			else {
+				System.err.println("Database Export corrupted - no header line found");
+				return null;
+			}
+			
 			//@TODO make here a line and not a row for each attribute
 			while((line = reader.readLine()) != null) {
-				attributes = line.split(",");
-				
-				if(!rawdata.keySet().contains(attributes[0] + "_" + isPatientIdFirst.toString()))
-					rawdata.put(attributes[0] + "_" + isPatientIdFirst.toString(), new ArrayList<RawDataMini>());
-				
-				row = new RawDataMini();
-				row.setPatientId(attributes[0] + "_" + isPatientIdFirst.toString());
-				row.setF635mean(Double.parseDouble(attributes[3]));
-				row.setLabel(attributes[2]);
-				row.setAntibodyId(attributes[1]);
-				rawdata.get(attributes[0] + "_" + isPatientIdFirst.toString()).add(row);
-				
-				// Toggle lines
-				isPatientIdFirst = !isPatientIdFirst;
+				attributes = line.split(regex);
+
+				if(extractPatientId(attributes[0]) != null) {
+					if(!rawdata.keySet().contains(attributes[0] + "_" + isPatientIdFirst.toString()))
+						rawdata.put(attributes[0] + "_" + isPatientIdFirst.toString(), new ArrayList<RawDataMini>());
+					
+					row = new RawDataMini();
+					for(int i = 0; i < header.length; i++)
+						row.setAttributeFromHeader(header[i], attributes[i]);
+
+					rawdata.get(attributes[0] + "_" + isPatientIdFirst.toString()).add(row);
+					// Toggle lines
+					isPatientIdFirst = !isPatientIdFirst;
+					
+//					row.setPatientId(attributes[0] + "_" + isPatientIdFirst.toString());
+//					row.setF635mean(Double.parseDouble(attributes[3]));
+//					row.setLabel(attributes[1]);
+//					row.setAntibodyId(attributes[1]);
+				}
 			}
 		}
 		catch(Exception e) {
@@ -433,36 +447,76 @@ public class DataController {
 	
 	
 	/**
-	 * Takes a result of data and calculates for each array list, i.e. for each records found for a patientID
-	 * the mean of each specified feature.
+	 * The same as converDatabaseExportToFeatureVector calculates the mean for each of the two records
+	 * of each patient ID, though
 	 * @param header	Header strings for each feature
 	 * @param data		data, either from database or from database export
 	 */
-	public void calculateMeanForFeaturesOfSamePatient(ArrayList<String> header, Hashtable <String
-			,ArrayList<RawDataMini>> data) {
-		ArrayList<RawDataMini> patientData;
-		RawDataMini newRecord;
-		Enumeration<String> num = data.keys();
-		double mean = 0;
+	public Hashtable<String, ArrayList<RawDataMini>> createFeatureVectorMean(String source) {
+		Hashtable<String, ArrayList<RawDataMini>> rawdata = null;
+		BufferedReader reader = null;
+		String regex = ",|;|\t";
+
+		String line;
+		String[] attributes;
+		String[] header;
+		RawDataMini row;
 		
-		while(num.hasMoreElements())
-		{
-			patientData = data.get(num.nextElement());
+		try {
+			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(source))));
+			rawdata = new Hashtable<String, ArrayList<RawDataMini>>();
 			
-			newRecord = new RawDataMini();
-			newRecord.setPatientId(patientData.get(0).getPatientId());
-			newRecord.setLabel(patientData.get(0).getLabel());
-			newRecord.setAntibodyId(patientData.get(0).getAntibodyId());
-			
-			for(String hdr : header) {
-				for(RawDataMini record : patientData) 
-					mean += Double.parseDouble(record.getAttributeFromHeader(hdr));
-				
-				newRecord.setAttributeFromHeader(hdr, mean/patientData.size());
+			line = reader.readLine();
+			if(line != null)
+				header = line.split(regex);
+			else {
+				System.err.println("Database Export corrupted - no header line found");
+				return null;
 			}
-			patientData.clear();
-			patientData.add(newRecord);				
+
+			while((line = reader.readLine()) != null) {
+				row = null;
+				attributes = line.split(regex);
+
+				// check if slot for a patient already exists
+				if(extractPatientId(attributes[0]) != null) {
+					row = new RawDataMini(); // Create new record and new slot in table
+					if(!rawdata.keySet().contains(attributes[0])) {
+						rawdata.put(attributes[0], new ArrayList<RawDataMini>());
+						rawdata.get(attributes[0]).add(row);
+					}
+					else {
+						for(RawDataMini mini : rawdata.get(attributes[0])) {// Check if current Antibody
+							if(mini.getAntibodyId().equals(attributes[2])) // ID already exists in a record
+							{											   // If so use existing record
+								row = mini;                                // to set attribute, else create
+								break;                                     // and add new record to list
+							}
+						}
+						// If no record with matching databaseId was found, add new record to set
+						if(row.patientId == null)
+							rawdata.get(attributes[0]).add(row);
+					}
+
+					for(int i = 0; i < header.length; i++){
+						row.setAttributeFromHeader(header[i], attributes[i]);
+					}
+				}
+			}
 		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				reader.close();
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return rawdata;
 	}
 	
 	/**
@@ -527,10 +581,8 @@ public class DataController {
 		BufferedReader reader = null;
 		FileWriter writer = null;
 		File tmp = new File("/tmp/tmp_db_import.csv");
-		Pattern pattern = Pattern.compile("GSM\\d+");
-		Matcher matcher = pattern.matcher(file.getName());
-		matcher.find();
-		id = matcher.group();
+		id = extractPatientId(file.getName());
+
 		try {
 			writer = new FileWriter(tmp);
 			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(file))));
@@ -538,7 +590,7 @@ public class DataController {
 			while(offset-- > 0 && reader.readLine() != null);
 			
 			while((line = reader.readLine()) != null) {
-				line = id +";" + line.replaceAll("\\s+", ";");
+				line = id +";" + line.replaceAll("\\t", ";");
 				writer.append(line + System.getProperty("line.separator"));
 			}			
 		}
@@ -559,6 +611,17 @@ public class DataController {
 		}
 		
 		return tmp;
+	}
+	
+	private String extractPatientId(String value) {
+		String ret = null;
+		
+		Pattern pattern = Pattern.compile("GSM\\d+");
+		Matcher matcher = pattern.matcher(value);
+		if(matcher.find())
+			return matcher.group();
+		else
+			return null;
 	}
 	
 	public void closeConnection() {
