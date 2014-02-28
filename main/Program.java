@@ -85,14 +85,14 @@ public class Program {
 //		data = datactrl.readMinimalRawDataFromDb(reporterIds, rawDataHeader);
 		
 //		data = datactrl.convertDatabaseExportToFeatureVector("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/AllFeaturesDbExport.csv");
-		data = datactrl.createFeatureVectorMean("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/AllFeaturesDbExport.csv");
+//		data = datactrl.createFeatureVectorMean("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/AllFeaturesDbExport.csv");
 //		datactrl.writeRawDataMiniToFile("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/test.csv",data, rawDataHeader, reporterIds);
-		for(String s : rawDataHeader){
-			ArrayList<String> tmp = new ArrayList<String>();
-			tmp.add(s);
-			datactrl.writeRawDataMiniToFile("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/"+ s + "_Vector_mean.csv"
-				,data, tmp, reporterIds);
-		}
+//		for(String s : rawDataHeader){
+//			ArrayList<String> tmp = new ArrayList<String>();
+//			tmp.add(s);
+//			datactrl.writeRawDataMiniToFile("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/"+ s + "_Vector_mean.csv"
+//				,data, tmp, reporterIds);
+//		}
 //		Object[] tmp = data.keySet().toArray();
 //		String[] keys = new String[tmp.length];
 //		
@@ -113,6 +113,10 @@ public class Program {
 		
 //		datactrl.importProtoArrayProcessedDataInDatabase("/mnt/data/Study_Works_blob/antibody/ProtoArrayAnalyzedData/PD vs NPC/");
 		
+//		datactrl.writeGivenProcessedDataFromCSVToArff("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TestingSet.csv"
+//				,"/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TestingSet.arff");
+		datactrl.writeGivenProcessedDataFromCSVToArff("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TrainingSet.csv"
+				,"/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TrainingSet.arff");
 		datactrl.closeConnection();
 	}
 	

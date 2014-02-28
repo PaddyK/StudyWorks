@@ -307,7 +307,6 @@ public class DataController {
 		return rawData;		
 	}
 	
-	
 	/**
 	 * Writes the data of a given set of raw data items to a csv file. Method readInstancesFromCSV
 	 * assumes first attribute in csv file is patientid, second attribute is label!!!
@@ -326,7 +325,6 @@ public class DataController {
 		Enumeration<String> keys = data.keys();
 		
 		// Create header line
-		// @TODO this is not working at the moment as antibodies are ordered alphabetically and not as specified
 		// with reporter Id --> get ids and append them
 		line = "PatientId" + separatorSymbol + "Label";
 		ArrayList<RawDataMini> forHeader = data.get(data.keys().nextElement());
@@ -368,7 +366,6 @@ public class DataController {
 			}
 		}
 	}
-	
 	
 	/**
 	 * Intended for files being created by using select into outfile, does essentially the same as
@@ -444,7 +441,6 @@ public class DataController {
 		
 		return rawdata;
 	}
-	
 	
 	/**
 	 * The same as converDatabaseExportToFeatureVector calculates the mean for each of the two records
@@ -568,6 +564,205 @@ public class DataController {
 	}
 	
 	/**
+	 * Converts raw data to arff file
+	 * @param destination
+	 * @param data
+	 */
+	public void writeArffFile(String destination, List<String> header, String relationName,
+			Hashtable<String, ArrayList<RawDataMini>> data) {
+		
+		File dest = new File(destination);
+		FileWriter writer = null;
+		String patientId = "";
+		String line = "";
+		String separatorSymbol = "\t";
+		String headerSec = "@RELATION " + relationName;
+		String dataSec;
+		ArrayList<RawDataMini> records;
+		Enumeration<ArrayList<RawDataMini>> enumeration = data.elements();
+		
+		// Create header line
+		// with reporter Id --> get ids and append them
+		headerSec = System.getProperty("line.separator") + "@ATTRIBUTE PatientId string" + 
+				System.getProperty("line.separator") + "@ATTRIBUTE class {yes,no}";
+		ArrayList<RawDataMini> forHeader = data.elements().nextElement();
+		Collections.sort(forHeader);
+		for(RawDataMini mini : forHeader) {
+			for(String h : header) {
+				headerSec += System.getProperty("line.separator");
+				if(!h.equalsIgnoreCase("Label") && !h.equalsIgnoreCase("PatientId"))
+					headerSec += "@ATTRIBUTE " + mini.getAntibodyId() + "_" + h + " " +
+						((isNumerical(mini.getAttributeFromHeader(h)))? "numeric" : "string");
+			}
+		}
+		headerSec += System.getProperty("line.separator") + "@DATA";		
+			
+		try {
+			writer = new FileWriter(dest.getAbsolutePath());
+			writer.append(headerSec);
+			while(enumeration.hasMoreElements()) {
+				records = enumeration.nextElement();
+				patientId = records.get(0).getPatientId();
+				
+				Collections.sort(records);
+				
+				line = patientId + separatorSymbol + records.get(0).getLabel();	
+				
+				for(RawDataMini d : records) {		
+//					System.out.println(d.getSet() + "\t" + records.size());
+					for(String h : header) {
+						line += separatorSymbol + d.getAttributeFromHeader(h);
+					}
+				}
+				writer.append(line + System.getProperty("line.separator"));
+				line = "";
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				writer.close();
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * With the study came a excel file providing with proto array processed data for different
+	 * classes. This function takes a csv export of a sheet of this file, where all columns and rows
+	 * have to be deleted except for the rows containing data and the columns containing antibody id
+	 * and RFU values
+	 * @param source
+	 * @param destination
+	 */
+	public void writeGivenProcessedDataFromCSVToArff(String source, String destination) {
+		BufferedReader reader = null;
+		FileWriter writer = null;
+		String line;
+		String[] attributes;
+		StringBuffer header;
+		StringBuffer data;
+		
+		char[] bitmap;
+		int columnsCount;
+		int posLineBreak;
+		int count = 0;
+		
+		// #################################################################################
+		// Step one create bitmap for parkinson diseased
+		// #################################################################################
+		
+		// <Message>
+		System.out.println("Create Bitmap storing location of PD patients...");
+		// </Message>
+		try {
+			reader = new BufferedReader(new InputStreamReader(new DataInputStream(
+					new FileInputStream(source))));
+			line = reader.readLine();
+			attributes = line.split("\t");
+			columnsCount = attributes.length;
+			bitmap = new char[columnsCount - 1]; // first column does not contain any RFU values
+			
+			for(int i = 1; i < columnsCount; i++) // Begin at one, first attribute contains "databaseId"
+				if(attributes[i].contains("PD"))
+					bitmap[i-1] = 1;
+				else
+					bitmap[i - 1] = 0;
+			
+			// <Message>
+			System.out.println("Bitmap created.\nStart initializing header and data section...");
+			// </Message>
+			// #################################################################################
+			// Step two - Creating arff header section;
+			// #################################################################################
+			header = new StringBuffer(95000);
+			data = new StringBuffer(10390760);
+			
+			header.append("@relation given_processed_data" + System.getProperty("line.separator"));
+			for(int i = 0; i < columnsCount - 1; i++) // Add line breaks, each column will later be
+				data.append(System.getProperty("line.separator")); // one row. Skip first column, though			
+
+			// <Message>
+			System.out.println("Header and data section initialized.\n" +
+					"Start processing data. This may take some time...");
+			// </Message>
+			
+			while((line = reader.readLine()) != null) {
+				attributes = line.split("\t");
+				// Add count_ to antibody id in order to get unique ids
+				header.append("@ATTRIBUTE \"" + count++ + "_" + attributes[0] + "\" numeric" + System.getProperty("line.separator"));
+				
+				// #################################################################################
+				// Step three - create data section
+				// ################################################################################
+				
+				// It is important to use indexOf here since line break moves as attribute are inserted!
+				posLineBreak = data.indexOf(System.getProperty("line.separator"));
+				// the line breaks inserted at the beginning serve as orientation. The value for
+				// each antibody is inserted at indexOfLineBreak - 1, nextIndexOfLineBreak - 1 and so
+				// on. Thus the data is transformed row by row from a 9460 x 69 to a 69 x 9460 matrix
+				for(int i = 1; i < columnsCount; i++) {
+					// Insert string BEFORE the line break
+					data.insert(posLineBreak, attributes[i] + "\t");
+					// Because of insertion line break was moved about the length of the inserted
+					// string + 1 character for the comma. Additional plus 1 in order to find the
+					// next line break. else the same line break would be found again
+					posLineBreak = data.indexOf(System.getProperty("line.separator")
+							,posLineBreak + attributes[i].length() + 1 + 1);
+				}
+			}
+			header.append("@ATTRIBUTE class {yes,no}");
+			header.append(System.getProperty("line.separator") + "@data" + System.getProperty("line.separator"));
+			
+			// Insert nominal class
+			posLineBreak = data.indexOf(System.getProperty("line.separator")); // set to one because of minus one below
+			String insert;
+			for(int i = 0; i < columnsCount - 1; i++) {
+				if(bitmap[i] == 1)
+					insert = "yes";
+				else
+					insert = "no";
+				
+				data.insert(posLineBreak, insert);
+				posLineBreak = data.indexOf(System.getProperty("line.separator")
+						,posLineBreak + insert.length() + 1);
+			}
+			// <Message>
+			System.out.println("Data Processed. Writing to file...");
+			// </Message>
+			// ################################################################################
+			// Step four - Write data to file
+			// ################################################################################
+			try {
+				writer = new FileWriter(destination);
+				writer.append(header);
+				writer.append(data);
+				// <Message>
+				System.out.println("Data succesfully written");
+				// </Message>
+			}
+			catch(IOException e) {
+				System.err.println("Error during writing/opening of arff file from processed data export!");
+				e.printStackTrace();
+			}
+			finally {try { writer.close();} catch(IOException e) {e.printStackTrace();}
+			}			
+		}
+		catch(IOException e) {
+			System.err.println("Error during opening/reading of processed data export!");
+			e.printStackTrace();
+		}
+		finally {
+			try {reader.close();} catch(IOException e){e.printStackTrace();}
+		}
+		
+	}
+	
+	/**
 	 * Removes leading lines from data in order to be able to import it via LOCAL INFILE and replaces
 	 * tabs with semicolon
 	 * @param file
@@ -622,6 +817,13 @@ public class DataController {
 			return matcher.group();
 		else
 			return null;
+	}
+	
+	private boolean isNumerical(Object object) {
+		if(object instanceof Integer || object instanceof Double)
+			return true;
+			
+		return false;
 	}
 	
 	public void closeConnection() {
