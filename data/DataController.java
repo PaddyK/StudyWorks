@@ -677,7 +677,7 @@ public class DataController {
 			System.out.println("Bitmap created.\nStart initializing header and data section...");
 			// </Message>
 			// #################################################################################
-			// Step two - Creating arff header section;
+			// Step two - Creating arff header section and initializ data section
 			// #################################################################################
 			header = new StringBuffer(95000);
 			data = new StringBuffer(10390760);
@@ -694,7 +694,8 @@ public class DataController {
 			while((line = reader.readLine()) != null) {
 				attributes = line.split("\t");
 				// Add count_ to antibody id in order to get unique ids
-				header.append("@ATTRIBUTE \"" + count++ + "_" + attributes[0] + "\" numeric" + System.getProperty("line.separator"));
+				header.append("@ATTRIBUTE \"" + count++ + "_" + attributes[0] + "\" numeric" +
+						System.getProperty("line.separator"));
 				
 				// #################################################################################
 				// Step three - create data section
