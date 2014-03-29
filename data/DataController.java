@@ -1,8 +1,8 @@
 package data;
-import java.text.CollationElementIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,7 +16,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -78,6 +77,7 @@ public class DataController {
 		this.password = password;
 		this.jdbcConnectionString = "com.mysql.jdbc.Driver";
 		this.databaseUrl = "jdbc:mysql://localhost/StudyWorks";
+		this.databaseConnection = null;
 		
 		protoHeader = new ArrayList<String>();
 		protoHeader.add("PatientId");
@@ -101,14 +101,14 @@ public class DataController {
 		protoHeader.add("Description");
 		
 		
-		try {
+		/*try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
 		}
 		catch(SQLException e) {
 			System.err.println("Failed to create connection to database: url " + this.databaseUrl +
 					"user " + this.user);
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	
@@ -576,6 +576,7 @@ public class DataController {
 		String patientId = "";
 		String line = "";
 		String separatorSymbol = "\t";
+		String linebreak = System.getProperty("line.separator");
 		String headerSec = "@RELATION " + relationName;
 		String dataSec;
 		ArrayList<RawDataMini> records;
@@ -583,19 +584,19 @@ public class DataController {
 		
 		// Create header line
 		// with reporter Id --> get ids and append them
-		headerSec = System.getProperty("line.separator") + "@ATTRIBUTE PatientId string" + 
-				System.getProperty("line.separator") + "@ATTRIBUTE class {yes,no}";
+		headerSec = linebreak + "@ATTRIBUTE PatientId string" + 
+				linebreak + "@ATTRIBUTE class {yes,no}";
 		ArrayList<RawDataMini> forHeader = data.elements().nextElement();
 		Collections.sort(forHeader);
 		for(RawDataMini mini : forHeader) {
 			for(String h : header) {
-				headerSec += System.getProperty("line.separator");
+				headerSec += linebreak;
 				if(!h.equalsIgnoreCase("Label") && !h.equalsIgnoreCase("PatientId"))
 					headerSec += "@ATTRIBUTE " + mini.getAntibodyId() + "_" + h + " " +
 						((isNumerical(mini.getAttributeFromHeader(h)))? "numeric" : "string");
 			}
 		}
-		headerSec += System.getProperty("line.separator") + "@DATA";		
+		headerSec += linebreak + "@DATA";		
 			
 		try {
 			writer = new FileWriter(dest.getAbsolutePath());
@@ -614,7 +615,7 @@ public class DataController {
 						line += separatorSymbol + d.getAttributeFromHeader(h);
 					}
 				}
-				writer.append(line + System.getProperty("line.separator"));
+				writer.append(line + linebreak);
 				line = "";
 			}
 		}
@@ -640,9 +641,12 @@ public class DataController {
 	 * @param destination
 	 */
 	public void writeGivenProcessedDataFromCSVToArff(String source, String destination) {
+		HashSet<String> ids = new HashSet<String>(); // stores ids for features and is used to identify duplicate ids
 		BufferedReader reader = null;
 		FileWriter writer = null;
 		String line;
+		String tmpId; // used to compose and check id for features
+		String linebreak = System.getProperty("line.separator");
 		String[] attributes;
 		StringBuffer header;
 		StringBuffer data;
@@ -650,7 +654,7 @@ public class DataController {
 		char[] bitmap;
 		int columnsCount;
 		int posLineBreak;
-		int count = 0;
+		int offset = 14; // index of the first column containing PD/CO/CY or sth else starting with 0 --> 16th column
 		
 		// #################################################################################
 		// Step one create bitmap for parkinson diseased
@@ -662,17 +666,22 @@ public class DataController {
 		try {
 			reader = new BufferedReader(new InputStreamReader(new DataInputStream(
 					new FileInputStream(source))));
-			line = reader.readLine();
+			// Skip the first few lines until header line begins
+			while((line = reader.readLine()) != null)
+				if(line.contains("Database"))
+					break;
+
 			attributes = line.split("\t");
 			columnsCount = attributes.length;
-			bitmap = new char[columnsCount - 1]; // first column does not contain any RFU values
+			bitmap = new char[columnsCount - offset]; // first column does not contain any RFU values
 			
-			for(int i = 1; i < columnsCount; i++) // Begin at one, first attribute contains "databaseId"
-				if(attributes[i].contains("PD"))
-					bitmap[i-1] = 1;
+			for(int i = 0; i < columnsCount - offset; i++){ // Begin at 14, first attribute contains unimportant stuff "databaseId"
+				if(attributes[i + offset].contains("PD"))
+					bitmap[i] = 1;
 				else
-					bitmap[i - 1] = 0;
-			
+					bitmap[i] = 0;
+			}
+
 			// <Message>
 			System.out.println("Bitmap created.\nStart initializing header and data section...");
 			// </Message>
@@ -682,9 +691,10 @@ public class DataController {
 			header = new StringBuffer(95000);
 			data = new StringBuffer(10390760);
 			
-			header.append("@relation given_processed_data" + System.getProperty("line.separator"));
-			for(int i = 0; i < columnsCount - 1; i++) // Add line breaks, each column will later be
-				data.append(System.getProperty("line.separator")); // one row. Skip first column, though			
+			header.append("@relation given_processed_data" + linebreak);
+			for(int i = 0; i < columnsCount - 1 - 13; i++) // Add line breaks, each column will later be
+				data.append(linebreak); // one row. Skip first column, though	
+																   // and also the ones containing row, block, etc
 
 			// <Message>
 			System.out.println("Header and data section initialized.\n" +
@@ -693,43 +703,52 @@ public class DataController {
 			
 			while((line = reader.readLine()) != null) {
 				attributes = line.split("\t");
-				// Add count_ to antibody id in order to get unique ids
-				header.append("@ATTRIBUTE \"" + count++ + "_" + attributes[0] + "\" numeric" +
-						System.getProperty("line.separator"));
+				// Compose and Check feature name
+				// ------------------------------------------
+				tmpId = attributes[0] + ((attributes[1].equals(""))? "" : "_" + attributes[1]);
+				if(ids.contains(tmpId)) 				// Database ID and ORF id should form a primary key
+					if(ids.contains(tmpId + "_2"))		// but for some cases exist duplicate DatabseIds and no
+						tmpId += "_3";					// ORF IDs leading to errors in weka
+					else
+						tmpId += "_2";
+				
+				ids.add(tmpId);
+				
+				header.append("@ATTRIBUTE \"" + tmpId + "\" numeric" + linebreak);
 				
 				// #################################################################################
 				// Step three - create data section
 				// ################################################################################
 				
 				// It is important to use indexOf here since line break moves as attribute are inserted!
-				posLineBreak = data.indexOf(System.getProperty("line.separator"));
+				posLineBreak = data.indexOf(linebreak);
 				// the line breaks inserted at the beginning serve as orientation. The value for
 				// each antibody is inserted at indexOfLineBreak - 1, nextIndexOfLineBreak - 1 and so
 				// on. Thus the data is transformed row by row from a 9460 x 69 to a 69 x 9460 matrix
-				for(int i = 1; i < columnsCount; i++) {
+				for(int i = offset; i < columnsCount; i++) { // start at first sample, skie all other columns
 					// Insert string BEFORE the line break
-					data.insert(posLineBreak, attributes[i] + "\t");
+					data.insert(posLineBreak, attributes[i].replace(',', '.') + ",");
 					// Because of insertion line break was moved about the length of the inserted
 					// string + 1 character for the comma. Additional plus 1 in order to find the
 					// next line break. else the same line break would be found again
-					posLineBreak = data.indexOf(System.getProperty("line.separator")
+					posLineBreak = data.indexOf(linebreak
 							,posLineBreak + attributes[i].length() + 1 + 1);
 				}
 			}
 			header.append("@ATTRIBUTE class {yes,no}");
-			header.append(System.getProperty("line.separator") + "@data" + System.getProperty("line.separator"));
+			header.append(linebreak + "@data" + linebreak);
 			
 			// Insert nominal class
-			posLineBreak = data.indexOf(System.getProperty("line.separator")); // set to one because of minus one below
+			posLineBreak = data.indexOf(linebreak); // set to one because of minus one below
 			String insert;
-			for(int i = 0; i < columnsCount - 1; i++) {
+			for(int i = 0; i < columnsCount - offset; i++) {
 				if(bitmap[i] == 1)
 					insert = "yes";
 				else
 					insert = "no";
 				
 				data.insert(posLineBreak, insert);
-				posLineBreak = data.indexOf(System.getProperty("line.separator")
+				posLineBreak = data.indexOf(linebreak
 						,posLineBreak + insert.length() + 1);
 			}
 			// <Message>
@@ -751,7 +770,7 @@ public class DataController {
 				e.printStackTrace();
 			}
 			finally {try { writer.close();} catch(IOException e) {e.printStackTrace();}
-			}			
+			}
 		}
 		catch(IOException e) {
 			System.err.println("Error during opening/reading of processed data export!");
@@ -772,6 +791,7 @@ public class DataController {
 	private File createTemporaryFileForImport(File file) {
 		String line;
 		String id;
+		String linebreak = System.getProperty("line.separator");
 		
 		int offset = 63;
 		BufferedReader reader = null;
@@ -787,7 +807,7 @@ public class DataController {
 			
 			while((line = reader.readLine()) != null) {
 				line = id +";" + line.replaceAll("\\t", ";");
-				writer.append(line + System.getProperty("line.separator"));
+				writer.append(line + linebreak);
 			}			
 		}
 		catch(FileNotFoundException e) {
@@ -828,6 +848,7 @@ public class DataController {
 	}
 	
 	public void closeConnection() {
+		if(this.databaseConnection != null)
 		try {
 			this.databaseConnection.close();
 		}

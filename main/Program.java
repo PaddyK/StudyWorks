@@ -1,6 +1,7 @@
 package main;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -115,8 +116,12 @@ public class Program {
 		
 //		datactrl.writeGivenProcessedDataFromCSVToArff("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TestingSet.csv"
 //				,"/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TestingSet.arff");
-		datactrl.writeGivenProcessedDataFromCSVToArff("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TrainingSet.csv"
-				,"/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/TrainingSet.arff");
+//		System.out.println("\nConverting...\n=============");
+//		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_test vs. NDC_test M Statistics.txt"
+//				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTestSet.arff");
+		System.out.println("\nConverting...\n=============");
+		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_train vs. NDC_train M Statistics.txt"
+				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTrainingSet.arff");
 		datactrl.closeConnection();
 	}
 	
