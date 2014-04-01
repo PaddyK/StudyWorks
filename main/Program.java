@@ -83,6 +83,7 @@ public class Program {
 		reporterIds.add(7841);
 		
 		DataController datactrl = new DataController("patrick", "");
+		WekaController wekactrl = new WekaController();
 //		data = datactrl.readMinimalRawDataFromDb(reporterIds, rawDataHeader);
 		
 //		data = datactrl.convertDatabaseExportToFeatureVector("/home/patrick/Documents/DHBW/5Semester/Study_Works/antibodies/Data Analysis/AllFeaturesDbExport.csv");
@@ -123,13 +124,39 @@ public class Program {
 //		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_train vs. NDC_train M Statistics.txt"
 //				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTrainingSet.arff");
 //		datactrl.closeConnection();
-		readNormalizeWriteWorkflow(datactrl);
+		
+		readNormalizeWriteWorkflow(datactrl, wekactrl);
+		
+		wekactrl.classifyWithRandomForest(-1, -1, -1, -1,
+				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\train_159-Samples_proCAT-normalization.arff"),
+				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\test_159-Samples_proCAT-normalization.arff"));
 	}
 	
-	public void readNormalizeWriteWorkflow(DataController datactrl) {
-		datactrl.gprFilesToArffFile("G:\\Study_Works_blob\\antibody\\DistinctFiles\\"
-				, "no", "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\");
-	}	
+	public void readNormalizeWriteWorkflow(DataController datactrl, WekaController wekactrl) {
+		String arffDirectory = "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\";
+		String filename = datactrl.gprFilesToArffFile("G:\\Study_Works_blob\\antibody\\DistinctFiles\\"
+				, "proCAT", arffDirectory);
+//		String filename = "159-Samples_no-normalization.arff";
+		System.out.println("\nCreate Test and Training Set and save them to file");
+		createAndSaveTestAndTrainingSet(wekactrl, datactrl, 
+				arffDirectory + filename, 
+				arffDirectory, filename);
+	}
+	
+	/**
+	 * Create and save a test/training set from a set of instances and save them to file
+	 * @param wekactrl	WekaController instance
+	 * @param datactrl	DataController instance
+	 * @param source	File to initial arff File
+	 * @param directory	Directory where test/Training set should be saved to
+	 * @param suffix	name of file. The name will be preceeded by test_, train_
+	 */
+	public void createAndSaveTestAndTrainingSet(WekaController wekactrl, DataController datactrl, 
+			String source, String directory, String suffix) {
+		String[] sets = wekactrl.readDataSetAndCreateTestTrainingSet(source, 0.8);
+		datactrl.saveInstancesToArffFile(sets[0], directory + "train_" + suffix);
+		datactrl.saveInstancesToArffFile(sets[1], directory + "test_" + suffix);		
+	}
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

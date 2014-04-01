@@ -105,8 +105,8 @@ public class Microarray {
 	 * @return	comma separated line of normalized of all non-control signals of this array
 	 */
 	public String getNormalizedSignalsAsLine() {
-		String line1 = disease; // Each mircorarray has features printed in duplicate
-		String line2 = disease; // therefore two lines of signals for each microarray
+		String line1 = ""; // Each mircorarray has features printed in duplicate
+		String line2 = ""; // therefore two lines of signals for each microarray
 		String[] blockRet;
 		for(int i = 0; i < blocks.length; i++)
 			for(int j = 0; j < blocks[i].length; j++) {
@@ -114,8 +114,8 @@ public class Microarray {
 				line1 += blockRet[0];
 				line2 += blockRet[1];
 			}
-		return line1.trim() + System.getProperty("line.separator") + line2.trim() +
-				System.getProperty("line.separator");
+		return line1.trim() + "," + disease + System.getProperty("line.separator") + line2.trim() +
+				"," + disease + System.getProperty("line.separator");
 	}
 	
 	/**
@@ -136,10 +136,11 @@ public class Microarray {
 	 * @return	arff header with all attributes declared
 	 */
 	public String getArffHeader() {
-		String line = "@ATTRIBUTE disease {PD,BC,MS,AD,NDC}";
+		String line = "";
 		for(int i = 0; i < blocks.length; i++)
 			for(int j = 0; j < blocks[i].length; j++)
 				line += blocks[i][j].getArffHeader();
+		line += "\n@ATTRIBUTE disease {PD,BC,MS,AD,NDC}";
 		return line.trim();
 	}
 	

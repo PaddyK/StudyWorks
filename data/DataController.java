@@ -794,14 +794,16 @@ public class DataController {
 	 * @param normalizationMethod	defines mehtod of normalization, no --> no normalization,
 	 * 								 log --> log-transform, proCAT --> proCAT, rlm --> RLM
 	 * @param destFolder			Path to destination folder, last / has to be included!
+	 * @return 						Returns file name of created Arff file
 	 */
-	public void gprFilesToArffFile(String folder, String normalizationMethod, String destFolder) {
+	public String gprFilesToArffFile(String folder, String normalizationMethod, String destFolder) {
 		Microarray microarray;
 		StringBuffer gprContent;
 		String disease;
 		String patientId;
 		String line;
 
+		String ret = null;
 		FileWriter writer = null;
 		BufferedReader reader = null;
 		String lineFeed = System.getProperty("line.separator");
@@ -846,7 +848,7 @@ public class DataController {
 					switch(normalizationMethod) {
 					case "log": microarray.normalize(new LogNormalization());
 						break;
-					case "proCAT": microarray.normalize(new ProCatNormalization());
+					case "proCAT": microarray.normalize(new ProCatNormalization(9,22));
 						break;
 					case "rlm": microarray.normalize(new RlmNormalization());
 						break;
@@ -875,8 +877,8 @@ public class DataController {
 			System.out.println("File " + samples + " finished\n");
 				
 			try {
-				writer = new FileWriter(destFolder + samples + "-Samples_" + normalizationMethod + 
-						"-normalization.arff");
+				ret = samples + "-Samples_" + normalizationMethod + "-normalization.arff";
+				writer = new FileWriter(destFolder + ret);
 				writer.write(arffContent.toString());
 			}
 			catch(IOException e) {
@@ -888,7 +890,27 @@ public class DataController {
 			}
 		}
 		else
-			System.err.println("Path " + folder + " does not exist or is no directory !!");		
+			System.err.println("Path " + folder + " does not exist or is no directory !!");
+		
+		return ret;
+	}
+	
+	/**
+	 * Writes data from instances to file.
+	 * @param data			data of instances. Derived by calling Instances.toString() method
+	 * @param destination	Destination of arff file
+	 */
+	public void saveInstancesToArffFile(String data, String destination) {
+		FileWriter writer = null;
+		try {
+		writer = new FileWriter(destination);
+		writer.write(data);
+		writer.flush();
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally { try { writer.close(); } catch(IOException e){e.printStackTrace();}}
 	}
 	
 	/**
