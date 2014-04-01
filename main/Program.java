@@ -119,13 +119,17 @@ public class Program {
 //		System.out.println("\nConverting...\n=============");
 //		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_test vs. NDC_test M Statistics.txt"
 //				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTestSet.arff");
-		System.out.println("\nConverting...\n=============");
-		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_train vs. NDC_train M Statistics.txt"
-				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTrainingSet.arff");
-		datactrl.closeConnection();
+//		System.out.println("\nConverting...\n=============");
+//		datactrl.writeGivenProcessedDataFromCSVToArff("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\ComparisonResults\\PD_train vs. NDC_train M Statistics.txt"
+//				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTrainingSet.arff");
+//		datactrl.closeConnection();
+		readNormalizeWriteWorkflow(datactrl);
 	}
 	
-	
+	public void readNormalizeWriteWorkflow(DataController datactrl) {
+		datactrl.gprFilesToArffFile("G:\\Study_Works_blob\\antibody\\DistinctFiles\\"
+				, "no", "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\");
+	}	
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

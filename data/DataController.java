@@ -15,11 +15,17 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import normalization.LogNormalization;
+import normalization.Normalization;
+import normalization.ProCatNormalization;
+import normalization.RlmNormalization;
 
 import com.mysql.jdbc.PreparedStatement;
 
@@ -212,7 +218,6 @@ public class DataController {
 			e.printStackTrace();
 		}
 	}
-	
 	
 	/**
 	 * Reads data for specified antibodies from each patient from raw data.
@@ -783,6 +788,110 @@ public class DataController {
 	}
 	
 	/**
+	 * Contains workflow for reading a gpr file, creating a microarray, normalizing features and
+	 * finally creating an arff file containing all data.
+	 * @param folder				Path to folder containing gpr files
+	 * @param normalizationMethod	defines mehtod of normalization, no --> no normalization,
+	 * 								 log --> log-transform, proCAT --> proCAT, rlm --> RLM
+	 * @param destFolder			Path to destination folder, last / has to be included!
+	 */
+	public void gprFilesToArffFile(String folder, String normalizationMethod, String destFolder) {
+		Microarray microarray;
+		StringBuffer gprContent;
+		String disease;
+		String patientId;
+		String line;
+
+		FileWriter writer = null;
+		BufferedReader reader = null;
+		String lineFeed = System.getProperty("line.separator");
+		StringBuffer arffContent = new StringBuffer("@RELATION microarrayexperiment" + lineFeed);
+		boolean headerAdded = false;
+		int samples = 0;
+				
+		File directory = new File(folder);
+		if(directory.exists() && directory.isDirectory()) {
+			File[] files = directory.listFiles(new FilenameFilter() {
+
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".gpr");
+				}
+				
+			});
+			for(File f : files) {
+				samples++;
+				patientId = extractPatientId(f.getName());
+				disease = extractDisease(f.getName());
+				System.out.println("\nProcessing patient " + patientId + " - File# " + samples);
+				
+				try {
+					// open file for reading
+					reader = new BufferedReader(new InputStreamReader(new DataInputStream(
+							new FileInputStream(f))));
+					gprContent = new StringBuffer();
+					
+					// read complete file in buffer
+					System.out.println("\t1. Start reading file...");
+					while((line = reader.readLine()) != null)
+						gprContent.append(line + lineFeed);	// line break is removed by read line
+					
+					// create and fill microarray with data
+					System.out.println("\t2. Create Microarray and fill it with data...");
+					microarray = new Microarray(disease, patientId);
+					microarray.fillWithData(gprContent);					
+					
+					// apply normalization method
+					System.out.println("\t3. Apply Normalization...");
+					switch(normalizationMethod) {
+					case "log": microarray.normalize(new LogNormalization());
+						break;
+					case "proCAT": microarray.normalize(new ProCatNormalization());
+						break;
+					case "rlm": microarray.normalize(new RlmNormalization());
+						break;
+					}
+					
+					// If arff header was not yet added (i.e. first file) add header
+					if(!headerAdded) {
+						System.out.println("\t\t Append header...");
+						headerAdded = true;
+						arffContent.append(microarray.getArffHeader());
+						arffContent.append(lineFeed + "@DATA" + lineFeed);
+					}
+					// add data content
+					System.out.println("\t4. Append to Arff file...");
+					arffContent.append(microarray.getNormalizedSignalsAsLine());
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+				finally{
+					try{reader.close();}
+					catch(IOException e){e.printStackTrace();}
+				}
+			}
+
+			System.out.println("File " + samples + " finished\n");
+				
+			try {
+				writer = new FileWriter(destFolder + samples + "-Samples_" + normalizationMethod + 
+						"-normalization.arff");
+				writer.write(arffContent.toString());
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+			finally{
+				try{writer.close();}
+				catch(IOException e){e.printStackTrace();}
+			}
+		}
+		else
+			System.err.println("Path " + folder + " does not exist or is no directory !!");		
+	}
+	
+	/**
 	 * Removes leading lines from data in order to be able to import it via LOCAL INFILE and replaces
 	 * tabs with semicolon
 	 * @param file
@@ -830,14 +939,24 @@ public class DataController {
 	}
 	
 	private String extractPatientId(String value) {
-		String ret = null;
-		
 		Pattern pattern = Pattern.compile("GSM\\d+");
 		Matcher matcher = pattern.matcher(value);
 		if(matcher.find())
 			return matcher.group();
 		else
 			return null;
+	}
+	private String extractDisease(String value) {
+		String ret;
+		Pattern pattern = Pattern.compile("PD|AD|MS|BC|CY|CO");
+		Matcher matcher = pattern.matcher(value);
+		if(matcher.find())
+			ret = matcher.group();
+		else
+			return null;
+		if(ret.equalsIgnoreCase("CY") || ret.equalsIgnoreCase("CO"))
+			return "NDC";
+		return ret;
 	}
 	
 	private boolean isNumerical(Object object) {
