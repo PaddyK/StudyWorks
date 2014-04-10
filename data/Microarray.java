@@ -114,8 +114,8 @@ public class Microarray {
 				line1 += blockRet[0];
 				line2 += blockRet[1];
 			}
-		return line1.trim() + "," + disease + System.getProperty("line.separator") + line2.trim() +
-				"," + disease + System.getProperty("line.separator");
+		return line1.trim() + disease + System.getProperty("line.separator") + line2.trim() +
+				disease + System.getProperty("line.separator");
 	}
 	
 	/**
@@ -140,7 +140,7 @@ public class Microarray {
 		for(int i = 0; i < blocks.length; i++)
 			for(int j = 0; j < blocks[i].length; j++)
 				line += blocks[i][j].getArffHeader();
-		line += "\n@ATTRIBUTE disease {PD,BC,MS,AD,NDC}";
+		line += "\n@ATTRIBUTE disease {AD,BC,MS,NDC,PD}";
 		return line.trim();
 	}
 	

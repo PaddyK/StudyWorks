@@ -1,12 +1,17 @@
 package classification;
 
+import java.beans.FeatureDescriptor;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+
+import data.DataController;
+import data.Microarray;
 
 import weka.attributeSelection.InfoGainAttributeEval;
 import weka.attributeSelection.Ranker;
@@ -201,6 +206,7 @@ public class WekaController {
 	 */
 	public void classifyWithRandomForest(int newNumFeatures, int newNumTrees, int seed, int depth,
 			Instances trainingSet, Instances testSet) {
+		
 		RandomForest randomforest; 
 		Evaluation evaluation;
 		Instances trainingSetSelect;
@@ -218,9 +224,9 @@ public class WekaController {
 		if(depth == -1)
 			depth = 0;
 		
-		for(int i = -1; i < 20; i+=2) {
-		Instances[] sets = selectFeatures(i, -1, trainingSet, testSet);
-		if(i==-1) i = 1;
+//		for(int i = -1; i < 20; i+=2) {
+		Instances[] sets = selectFeatures(newNumFeatures, -1, trainingSet, testSet);
+//		if(i==-1) i = 1;
 		testSetSelect = sets[1];
 		trainingSetSelect = sets[0];
 		
@@ -245,7 +251,7 @@ public class WekaController {
 
 			try {
 				evaluation.evaluateModel(randomforest, testSetSelect);
-				System.out.println("Evaluation Test-set\n##################################" +
+				System.out.println(newNumFeatures + "\t" + newNumTrees + "\t" +
 							(evaluation.correct()/(evaluation.correct() + evaluation.incorrect())));
 			}
 			catch(Exception e) {
@@ -257,7 +263,7 @@ public class WekaController {
 			System.err.println("Error during 10-fold-cross validation");
 			e.printStackTrace();
 		}		
-		}
+//		}
 	}
 	
 	/**
@@ -294,5 +300,86 @@ public class WekaController {
 	
 	public void filterInstances(Instances instances, List<String> antibodyIds) {
 		
+	}
+	
+	/**
+	 * Prepares loocv. Creates tests model created from n - 1 patients against each patient for
+	 * the specified classifiers once
+	 * @param arrays		Patients microarrays
+	 * @param data			DataController for writing and deleting temporary arff files
+	 * @param classifiers	Classifiers loocv should be performed for
+	 */
+	public void prepareLoocValidation(ArrayList<Microarray> arrays, DataController data,
+			ArrayList<Classifier> classifiers) {
+		Microarray array;
+		Instances loocTestset;
+		Instances loocTrainingset;
+		Evaluation eval;
+		
+		String fileTrain = "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis" +
+				"\\Arff\\looc_train.arff";
+		String fileTest = "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis" +
+				"\\Arff\\looc_test.arff";
+		
+		ArrayList<Microarray> tested = new ArrayList<Microarray>(arrays.size());
+		ArrayList<Microarray> tmp = new ArrayList<Microarray>(arrays.size());
+		ArrayList<Microarray> trainingset = new ArrayList<Microarray>(arrays.size());
+		ArrayList<ClassificationResult> results = new ArrayList<ClassificationResult>();
+		
+		// This is imperformant since for each classifier read/write operations do occure
+		// however due to classification instances will change
+		// TODO consolidate read/writes for classifiers
+		// TODO implement feature selection as filter
+		for(int i = 0; i < classifiers.size(); i++) {
+			results.add(new ClassificationResult(classifiers.get(i), "looc-" + new Date().getTime()));
+			
+			do {
+				array = arrays.get(0);
+				arrays.remove(0);
+				tmp.add(array);
+				trainingset.addAll(arrays);
+				trainingset.addAll(tested);
+				
+				data.writeMicroarraysToArffFile(arrays, fileTrain);
+				data.writeMicroarraysToArffFile(tmp, fileTest);
+				
+				tmp.clear();
+				trainingset.clear();
+				tested.add(array);
+				
+				loocTestset = readInstancesFromARFF(fileTest);
+				loocTrainingset = readInstancesFromARFF(fileTrain);
+				
+				eval = performLoocValidation(loocTrainingset, loocTestset, null);
+				results.get(i).addFold(new Fold(eval, "fold-" + new Date().getTime(), 
+						results.get(i).loocId, array.getPatientId()));				
+			}
+			while(!arrays.isEmpty());
+		}
+	}
+	
+	private Evaluation performLoocValidation(Instances train, Instances test, Classifier classifier) {
+		Evaluation eval = null;
+		
+		try {
+			classifier.buildClassifier(train);
+			eval = new Evaluation(train);
+			
+			try {
+				eval.evaluateModel(classifier, test);
+			}
+			catch(Exception e) {
+				System.err.println("Error during evaluation model for classifier " +
+						classifier.toString() + "\n==============================================");
+				e.printStackTrace();
+			}
+			
+		}
+		catch(Exception e) {
+			System.err.println("Error during training classifier " + classifier.toString()
+					+"============================================================");
+			e.printStackTrace();
+		}
+		return eval;
 	}
 }

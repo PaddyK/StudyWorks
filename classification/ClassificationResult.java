@@ -1,127 +1,151 @@
 package classification;
 
-import weka.core.Instances;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-public class ClassificationResult implements Comparable<Double>{
-	private int correct;
-	private int incorrect;
-	private double accuracy;
-	private double avgRecall;
-	private double avgPrecision;
-	private double avgF1score;
-	private double[] recall;
-	private double[] precision;
-	private double[] f1score;
-	private double[] truepositive;
-	private double[] falsepositive;
-	private double[] falsenegative;
-	Instances instances;
+import weka.core.Instances;
+import weka.classifiers.Evaluation;
+import weka.classifiers.Classifier;
+
+/**
+ * This class represents a result from an classification result
+ * @author Patrick
+ *
+ */
+public class ClassificationResult implements Comparable<MyEvaluation>{
+	
+	private String[] antibodyIds;
+	private String[] classifierOptions;
+	private String classifier;
+	private ArrayList<Fold> folds;
+	protected MyEvaluation eval;
+	protected String loocId;
 	
 	//	  a  b  c  d  e   <-- classified as 
-	// a 42  1  0  1  1 |  a = PD
+	// a 42  1  0  1  1 |  a = AD
 	// b  1 41  0  2  4 |  b = BC
 	// c  0  3  8  2  1 |  c = MS
-	// d  6  0  0 64 10 |  d = AD
-	// e  0  1  0  4 62 |  e = NDC
-	public ClassificationResult(double[][] confusionMatrix, Instances instcs) {
-		instances = instcs;
-		recall = new double[confusionMatrix.length];
-		precision = new double[confusionMatrix.length];
-		f1score = new double[confusionMatrix.length];
-		truepositive = new double[confusionMatrix.length];
-		falsenegative = new double[confusionMatrix.length];
-		falsepositive = new double[confusionMatrix.length];
-		correct = 0;
-		incorrect = 0;
-		avgRecall = 0;
-		avgPrecision = 0;
-		avgF1score = 0;
-		
-		for(int i = 0; i < recall.length; i++) {
-			recall[i] = 0;
-			precision[i] = 0;
-			f1score[i] = 0;
-			truepositive[i] = 0;
-			falsepositive[i] = 0;
-			falsenegative[i] = 0;
-		}
-		
-		for(int i = 0; i < confusionMatrix.length; i++)
-			for(int j = 0; j < confusionMatrix.length; j++)
-				if(i == j) {
-					truepositive[i] += confusionMatrix[i][j];
-					correct += confusionMatrix[i][j];
-				}
-				else {
-					falsepositive[i] += confusionMatrix[i][j];
-					falsenegative[j] += confusionMatrix[i][j];
-					incorrect += confusionMatrix[i][j];
-				}
-		
-		for(int i = 0; i < recall.length; i++) {
-			precision[i] = truepositive[i] / (truepositive[i] + falsepositive[i]);
-			recall[i] = truepositive[i] / (truepositive[i] + falsenegative[i]);
-			f1score[i] = 2 * precision[i] * recall[i] / (precision[i] + recall[i]);
-		}
-		avgRecall = mean(recall);
-		avgPrecision = mean(precision);
-		avgF1score = mean(f1score);
-		accuracy = (double)correct/(double)(correct + incorrect);
-		
+	// d  6  0  0 64 10 |  d = NDC
+	// e  0  1  0  4 62 |  e = PD
+	public ClassificationResult(Classifier cf, String loocId) {
+		antibodyIds = null;
+		folds = new ArrayList<Fold>();
+		classifierOptions = cf.getOptions();
+		classifier = cf.toString();
+		eval = null;
+		this.loocId = loocId;
 	}
 	
-	private double mean(double[] values) {
+	protected ClassificationResult(String loocId) {
+		this.loocId = loocId;
+	}
+	
+	protected double mean(double[] values) {
 		double ret = 0;
 		for(int i = 0; i < values.length; i++)
 			ret += values[i];
 		return ret/values.length;
 	}
 
-	@Override
-	public int compareTo(Double avgf1) {
-		if(avgF1score < avgf1)
-			return -1;
-		else if(avgF1score == avgf1)
-			return 0;
-		else
-			return 1;
-	}
-
-	public double getAvgRecall() {
-		return avgRecall;
-	}
-
-	public double getAvgPrecision() {
-		return avgPrecision;
-	}
-
-	public double getAvgF1score() {
-		return avgF1score;
-	}
-	public double getAccuracy() {
-		return accuracy;
-	}
-
-	public int getCorrect() {
-		return correct;
-	}
-
-	public int getIncorrect() {
-		return incorrect;
-	}
-	
 	/**
 	 * Returns the antibody ids used in classification for this result
 	 * @return	string array containing antibody Ids
 	 */
 	public String[] getAttributeNames() {
-		String[] names = new String[instances.numAttributes() - 1];
-		for(int i = 0; i < instances.numAttributes(); i++)
-			if(instances.attribute(i).isNominal())
-				i++; // Skip class attribute
-			else
-				names[i] = instances.attribute(i).name();
-		return names;
+		return antibodyIds;
 				
 	}
+	
+	public String toInsertStatemnt() {
+		String command = "INSERT INTO fold (correct" +
+				",incorrect" +
+				",accuracy" +
+				",avgRecall" +
+				",avgPrecision," +
+				"avgF1Score" +
+				",kappa,meanAbsoluteError" +
+				",rootMeanSquaredError" +
+				",relativeAbsoluteError" +
+				",rootRelativeSquaredError" +
+				",loocId" +
+				",classifier" +
+				",classifierOptions)";
+		command += "Values(" + eval.getCorrect()
+				+ "," + eval.getIncorrect() 
+				+ "," + eval.getAccuracy() 
+				+ "," + eval.getAvgRecall() 
+				+ "," + eval.getAvgPrecision() 
+				+ "," + eval.getAvgF1score() 
+				+ "," + eval.getKappa() 
+				+ "," + eval.getMeanAbsoluteError() 
+				+ "," + eval.getRootMeanSquaredError() 
+				+ "," + eval.getRelativeAbsoluteError() 
+				+ "," + eval.getRootRelativeSquaredError() 
+				+ "," + loocId 
+				+ "," + classifier 
+				+ "," + classifierOptions + ");";
+		command += getInsertForMeasures(loocId, eval.getPrecision(), "precision");
+		command += getInsertForMeasures(loocId, eval.getRecall(), "recall");
+		command += getInsertForMeasures(loocId, eval.getF1Score(), "f1score");
+		for(Fold f : folds)
+			command += f.toInsertStatemnt();
+		command += "INSERT INTO (loocId,antibodyDbId) VALUES";
+		for(String s : antibodyIds)
+			command += "(" + loocId + "," + s + "),";
+		command = command.substring(0, command.length() - 2);
+		return command;
+	}
+	
+	protected String getInsertForMeasures(String id, double[] arr, String table) {
+		String command = "INSERT INTO " + table + "(eid,value) VALUES(" + id;
+		for(double d : arr)
+			command += "," + d;
+		command += ");";
+		return command;
+	}
+
+	public String[] getClassifierOptions() {
+		return classifierOptions;
+	}
+
+	public String getClassifier() {
+		return classifier;
+	}
+
+	public ArrayList<Fold> getFolds() {
+		return folds;
+	}
+
+	public String getLoocId() {
+		return loocId;
+	}
+	
+	public MyEvaluation getMyEvaluation() {
+		return eval;
+	}
+	
+	@Override
+	public int compareTo(MyEvaluation eval) {
+		return this.eval.compareTo(eval.getAvgF1score());
+	}
+
+	public void finalizeLooc() {
+		eval = new MyEvaluation(folds);
+	}
+	
+	public void addFold(Fold fold) {
+		folds.add(fold);
+	}
+
+	public void setInstances(Instances instcs) {
+		antibodyIds = new String[instcs.numAttributes() - 1];
+		int classSeen = 0;
+		for(int i = 0; i < instcs.numAttributes() - 1; i++)
+			if(i == instcs.classIndex())
+				classSeen++;
+			else
+				antibodyIds[i] = instcs.attribute(i + classSeen).name();
+	}
+	
 }

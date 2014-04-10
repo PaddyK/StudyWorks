@@ -73,6 +73,8 @@ public class DataController {
 	*/
 	List<String> protoHeader;
 	
+	public DataController() { }
+	
 	/**
 	 * Constructor for class DataController. Takes a username and password.
 	 * @param username	username for mysql database
@@ -788,6 +790,107 @@ public class DataController {
 	}
 	
 	/**
+	 * Reads all gpr files from specified folders and converts them to microarray representations
+	 * @param folder	Folder where gpr files reside
+	 * @return			Returns arrayList of Microarrays derived from gpr files residing in folder
+	 */
+	public ArrayList<Microarray> gprFilesToMicroarray(String folder) {
+		String patientId;
+		String disease;
+		StringBuffer gprContent;
+		String line;
+		
+		int samples = 0;
+		String lineFeed = System.getProperty("line.separator");
+		BufferedReader reader = null;
+		Microarray microarray = null;
+		ArrayList<Microarray> arrays = new ArrayList<Microarray>();
+		File directory = new File(folder);
+		
+		if(directory.exists() && directory.isDirectory()) {
+			File[] files = directory.listFiles(new FilenameFilter() {
+
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".gpr");
+				}
+				
+			});
+			for(File f : files) {
+				samples++;
+				patientId = extractPatientId(f.getName());
+				disease = extractDisease(f.getName());
+				System.out.println("\nProcessing patient " + patientId + " - File# " + samples);
+				
+				try {
+					// open file for reading
+					reader = new BufferedReader(new InputStreamReader(new DataInputStream(
+							new FileInputStream(f))));
+					gprContent = new StringBuffer();
+					
+					// read complete file in buffer
+					System.out.println("\t1. Start reading file...");
+					while((line = reader.readLine()) != null)
+						gprContent.append(line + lineFeed);	// line break is removed by read line
+					
+					// create and fill microarray with data
+					System.out.println("\t2. Create Microarray and fill it with data...");
+					microarray = new Microarray(disease, patientId);
+					microarray.fillWithData(gprContent);
+				}
+				catch(IOException e) {
+					System.err.println("Error during reading gpr file in Method gprFilesToMicroarray" +
+							"\n========================================================");
+					e.printStackTrace();
+				}
+				arrays.add(microarray);
+			}
+		}
+		try{
+			reader.close();
+		}
+		catch(IOException e) { e.printStackTrace(); }
+		return arrays;
+	}
+	
+	/**
+	 * This method writes a list of microarrays to arff file
+	 * @param microarrays	ArrayList of microarrays
+	 * @param destination	Arff file microarrays should b
+	 */
+	public void writeMicroarraysToArffFile(ArrayList<Microarray> microarrays, String destination) {
+		FileWriter writer = null;
+		String lineFeed = System.getProperty("line.separator");
+		boolean headerAdded = false;
+		StringBuffer arffContent = new StringBuffer();
+		
+		for(Microarray microarray : microarrays) {
+			// If arff header was not yet added (i.e. first file) add header
+			if(!headerAdded) {
+				System.out.println("\t\t Append header...");
+				headerAdded = true;
+				arffContent.append(microarray.getArffHeader());
+				arffContent.append(lineFeed + "@DATA" + lineFeed);
+			}
+			// add data content
+			System.out.println("\tAppend to Arff file...");
+			arffContent.append(microarray.getNormalizedSignalsAsLine());
+		}
+		
+		try {
+			writer = new FileWriter(destination);
+			writer.write(arffContent.toString());
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally{
+			try{writer.close();}
+			catch(IOException e){e.printStackTrace();}
+		}
+	}
+	
+	/**
 	 * Contains workflow for reading a gpr file, creating a microarray, normalizing features and
 	 * finally creating an arff file containing all data.
 	 * @param folder				Path to folder containing gpr files
@@ -895,6 +998,7 @@ public class DataController {
 		return ret;
 	}
 	
+	
 	/**
 	 * Writes data from instances to file.
 	 * @param data			data of instances. Derived by calling Instances.toString() method
@@ -911,6 +1015,16 @@ public class DataController {
 			e.printStackTrace();
 		}
 		finally { try { writer.close(); } catch(IOException e){e.printStackTrace();}}
+	}
+	
+	
+	/**
+	 * This method deletes a file from File System
+	 * @param target	Path of file to be deleted
+	 */
+	public void removeFile(String target) {
+		File file = new File(target);
+		file.delete();
 	}
 	
 	/**

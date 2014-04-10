@@ -63,7 +63,7 @@ public class Record {
 		normalizedSignal = signal; // In order to allow no normalization
 		description = attributes[53].trim();
 		
-		int colon = attributes[0].indexOf(':');
+		int colon = attributes[0].indexOf(':') + 1;
 		if(description.contains("Control")) {
 			isControl = true;
 			isEmpty = false;

@@ -80,8 +80,8 @@ public class Block {
 		for(int i = 0; i < records.length; i++)
 			for(int j = 0; j < records[i].length; j+=2)
 				if(!records[i][j].isControl() && !records[i][j].isEmpty()) {
-					line1 += "," + records[i][j].getNormalizedSignal();
-					line2 += "," + records[i][j + 1].getNormalizedSignal();
+					line1 += records[i][j].getNormalizedSignal() + ",";
+					line2 += records[i][j + 1].getNormalizedSignal() + ",";
 				}
 
 		return new String[]{line1, line2};

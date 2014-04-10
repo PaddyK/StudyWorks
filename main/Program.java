@@ -125,11 +125,13 @@ public class Program {
 //				,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\MyTrainingSet.arff");
 //		datactrl.closeConnection();
 		
-		readNormalizeWriteWorkflow(datactrl, wekactrl);
-		
-		wekactrl.classifyWithRandomForest(-1, -1, -1, -1,
-				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\train_159-Samples_proCAT-normalization.arff"),
-				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\test_159-Samples_proCAT-normalization.arff"));
+//		readNormalizeWriteWorkflow(datactrl, wekactrl);
+		System.out.println("features\ttrees\tprecision");
+		for(int j = 1; j < 20; j++)
+		for(int i = 10; i < 50; i+=10)
+		wekactrl.classifyWithRandomForest(j, i, -1, -1,
+				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\train_159-Samples_no-normalization.arff"),
+				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\test_159-Samples_no-normalization.arff"));
 	}
 	
 	public void readNormalizeWriteWorkflow(DataController datactrl, WekaController wekactrl) {

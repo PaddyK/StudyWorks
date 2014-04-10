@@ -24,7 +24,6 @@ public class ProCatNormalization implements Normalization {
 		
 		double avgMedian;
 		double avgMad;
-		double border;
 		int blockrows = array.getBlockRows();
 		int blockcolumns = array.getBlockColumns();
 		int featurerows = array.getFeatureRows();
@@ -47,7 +46,7 @@ public class ProCatNormalization implements Normalization {
 						idx2 = j * blockcolumns + r;
 						medians[idx1][idx2] = calculateMedian(signals);
 						for(int q = 0; q < signals.size(); q++)
-							signals.set(q, signals.get(q) - medians[idx1][idx2]);
+							signals.set(q, Math.abs(signals.get(q) - medians[idx1][idx2]));
 						mads[idx1][idx2] = calculateMedian(signals);
 						signals.clear();
 					}
@@ -242,6 +241,8 @@ public class ProCatNormalization implements Normalization {
 		// else calculate the middel one, (5 - 1) = 2 --> 0 1 [2] 3 4
 		if(values.size() % 2 == 0) {
 			int idx = (int)(values.size() / 2);
+			double val1 = values.get(idx);
+			double val2 = values.get(idx - 1);
 			median = (double)(values.get(idx) + values.get(idx - 1)) / (double)2;
 		}
 		else {
