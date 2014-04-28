@@ -9,12 +9,89 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import classification.ClassificationResult;
+import classification.Fold;
 import classification.WekaController;
 
 import data.DataController;
+import data.Microarray;
 import data.RawDataMini;
 
 import weka.core.Instances;
+import weka.classifiers.*;
+import weka.classifiers.bayes.BayesNet;
+import weka.classifiers.bayes.ComplementNaiveBayes;
+import weka.classifiers.bayes.DMNBtext;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.bayes.NaiveBayesMultinomial;
+import weka.classifiers.bayes.NaiveBayesMultinomialUpdateable;
+import weka.classifiers.bayes.NaiveBayesSimple;
+import weka.classifiers.bayes.NaiveBayesUpdateable;
+import weka.classifiers.functions.LibLINEAR;
+import weka.classifiers.functions.LibSVM;
+import weka.classifiers.functions.Logistic;
+import weka.classifiers.functions.MultilayerPerceptron;
+import weka.classifiers.functions.SMO;
+import weka.classifiers.functions.SimpleLogistic;
+import weka.classifiers.lazy.IB1;
+import weka.classifiers.lazy.IBk;
+import weka.classifiers.lazy.KStar;
+import weka.classifiers.lazy.LWL;
+import weka.classifiers.meta.AdaBoostM1;
+import weka.classifiers.meta.AttributeSelectedClassifier;
+import weka.classifiers.meta.Bagging;
+import weka.classifiers.meta.CVParameterSelection;
+import weka.classifiers.meta.ClassificationViaClustering;
+import weka.classifiers.meta.ClassificationViaRegression;
+import weka.classifiers.meta.Dagging;
+import weka.classifiers.meta.Decorate;
+import weka.classifiers.meta.END;
+import weka.classifiers.meta.FilteredClassifier;
+import weka.classifiers.meta.Grading;
+import weka.classifiers.meta.LogitBoost;
+import weka.classifiers.meta.MetaCost;
+import weka.classifiers.meta.MultiBoostAB;
+import weka.classifiers.meta.MultiClassClassifier;
+import weka.classifiers.meta.MultiScheme;
+import weka.classifiers.meta.OrdinalClassClassifier;
+import weka.classifiers.meta.RacedIncrementalLogitBoost;
+import weka.classifiers.meta.RandomCommittee;
+import weka.classifiers.meta.RandomSubSpace;
+import weka.classifiers.meta.RotationForest;
+import weka.classifiers.meta.Stacking;
+import weka.classifiers.meta.StackingC;
+import weka.classifiers.meta.Vote;
+import weka.classifiers.meta.nestedDichotomies.ClassBalancedND;
+import weka.classifiers.meta.nestedDichotomies.DataNearBalancedND;
+import weka.classifiers.meta.nestedDichotomies.ND;
+import weka.classifiers.mi.CitationKNN;
+import weka.classifiers.mi.MISMO;
+import weka.classifiers.mi.MIWrapper;
+import weka.classifiers.mi.SimpleMI;
+import weka.classifiers.misc.HyperPipes;
+import weka.classifiers.misc.VFI;
+import weka.classifiers.rules.ConjunctiveRule;
+import weka.classifiers.rules.DTNB;
+import weka.classifiers.rules.DecisionTable;
+import weka.classifiers.rules.JRip;
+import weka.classifiers.rules.NNge;
+import weka.classifiers.rules.OneR;
+import weka.classifiers.rules.PART;
+import weka.classifiers.rules.Ridor;
+import weka.classifiers.rules.ZeroR;
+import weka.classifiers.trees.BFTree;
+import weka.classifiers.trees.DecisionStump;
+import weka.classifiers.trees.FT;
+import weka.classifiers.trees.J48;
+import weka.classifiers.trees.J48graft;
+import weka.classifiers.trees.LADTree;
+import weka.classifiers.trees.LMT;
+import weka.classifiers.trees.NBTree;
+import weka.classifiers.trees.REPTree;
+import weka.classifiers.trees.RandomForest;
+import weka.classifiers.trees.RandomTree;
+import weka.classifiers.trees.SimpleCart;
+import weka.classifiers.trees.UserClassifier;
 
 public class Program {
 
@@ -82,7 +159,7 @@ public class Program {
 		reporterIds.add(6083);
 		reporterIds.add(7841);
 		
-		DataController datactrl = new DataController("patrick", "");
+		DataController datactrl = new DataController("patrick", "qwert");
 		WekaController wekactrl = new WekaController();
 //		data = datactrl.readMinimalRawDataFromDb(reporterIds, rawDataHeader);
 		
@@ -126,12 +203,125 @@ public class Program {
 //		datactrl.closeConnection();
 		
 //		readNormalizeWriteWorkflow(datactrl, wekactrl);
-		System.out.println("features\ttrees\tprecision");
-		for(int j = 1; j < 20; j++)
-		for(int i = 10; i < 50; i+=10)
-		wekactrl.classifyWithRandomForest(j, i, -1, -1,
-				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\train_159-Samples_no-normalization.arff"),
-				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\test_159-Samples_no-normalization.arff"));
+//		System.out.println("features\ttrees\tprecision");
+//		for(int j = 1; j < 20; j++)
+//		for(int i = 10; i < 50; i+=10)
+//		wekactrl.classifyWithRandomForest(j, i, -1, -1,
+//				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\train_159-Samples_no-normalization.arff"),
+//				wekactrl.readInstancesFromARFF("G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\test_159-Samples_no-normalization.arff"));
+		performLoocv(wekactrl, datactrl);
+	}
+	
+	public void performLoocv(WekaController wekacontroller, DataController data) {
+		ArrayList<weka.classifiers.Classifier> classifiers = new ArrayList<weka.classifiers.Classifier>();
+//		classifiers.add(new BayesNet());							// Discretizing
+//		classifiers.add(new ComplementNaiveBayes()); 				// Error, cant handle negative numeric values
+//		classifiers.add(new DMNBtext());
+//		classifiers.add(new NaiveBayes());
+//		classifiers.add(new NaiveBayesMultinomial()); 				// Error, cant handle negative numeric values
+//		classifiers.add(new NaiveBayesMultinomialUpdateable()); 	// Error, cant handle negative numeric values
+//		classifiers.add(new NaiveBayesSimple()); 					// Does somehow not build a classifier
+//		classifiers.add(new NaiveBayesUpdateable());
+//		
+//		classifiers.add(new LibLINEAR()); 							// Not in classpath
+//		classifiers.add(new LibSVM()); 								// Not in classpath
+//		classifiers.add(new Logistic());							// No output
+//		classifiers.add(new MultilayerPerceptron());
+//		classifiers.add(new SimpleLogistic());
+//		classifiers.add(new SMO());
+//		
+//		classifiers.add(new IB1());
+//		classifiers.add(new IBk());
+//		classifiers.add(new KStar());
+//		classifiers.add(new LWL());
+//		
+//		classifiers.add(new AdaBoostM1());
+//		classifiers.add(new AttributeSelectedClassifier());
+//		classifiers.add(new Bagging());
+//		classifiers.add(new ClassificationViaClustering());
+//		classifiers.add(new ClassificationViaRegression());
+//		classifiers.add(new CVParameterSelection());
+//		classifiers.add(new Dagging());
+//		classifiers.add(new Decorate());
+//		classifiers.add(new END());
+//		classifiers.add(new FilteredClassifier());
+//		classifiers.add(new Grading());
+//		classifiers.add(new LogitBoost());
+//		classifiers.add(new MetaCost());
+//		classifiers.add(new MultiBoostAB());
+//		classifiers.add(new MultiClassClassifier());
+//		classifiers.add(new MultiScheme());
+//		classifiers.add(new OrdinalClassClassifier());
+//		classifiers.add(new RacedIncrementalLogitBoost());
+//		classifiers.add(new RandomCommittee());
+//		classifiers.add(new RandomSubSpace());
+//		classifiers.add(new ClassBalancedND());
+//		classifiers.add(new DataNearBalancedND());
+//		classifiers.add(new ND());
+//		classifiers.add(new RotationForest());
+//		classifiers.add(new Stacking());
+//		classifiers.add(new StackingC());
+//		classifiers.add(new Vote());
+//		
+//		classifiers.add(new CitationKNN());
+//		classifiers.add(new MISMO());
+//		classifiers.add(new MIWrapper());
+//		classifiers.add(new SimpleMI());
+//		
+//		classifiers.add(new HyperPipes());
+//		classifiers.add(new VFI());
+//		
+//		classifiers.add(new ConjunctiveRule());
+//		classifiers.add(new DecisionTable());
+//		classifiers.add(new DTNB());
+//		classifiers.add(new JRip());
+//		classifiers.add(new NNge());
+//		classifiers.add(new OneR());
+//		classifiers.add(new PART());
+//		classifiers.add(new Ridor());
+//		classifiers.add(new ZeroR());
+//		
+//		classifiers.add(new BFTree());
+//		classifiers.add(new DecisionStump());
+//		classifiers.add(new FT());
+//		classifiers.add(new J48());
+//		classifiers.add(new J48graft());
+//		classifiers.add(new LADTree());
+//		classifiers.add(new LMT());
+//		classifiers.add(new NBTree());
+		RandomForest c = new RandomForest();
+		c.setSeed(1);
+		c.setNumTrees(10);
+		c.setNumFeatures(0);
+		classifiers.add(c);
+//		classifiers.add(new RandomTree());
+//		classifiers.add(new REPTree());
+//		classifiers.add(new SimpleCart());
+////		classifiers.add(new UserClassifier());
+		
+//		classifiers.clear();		
+//		classifiers.add(new NaiveBayes());
+		
+		ArrayList<ClassificationResult> results = wekacontroller.prepareLoocValidation(classifiers,
+				"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\loocv\\", 159);
+		
+		String content = "";
+		StringBuffer buffer = new StringBuffer();
+		for(ClassificationResult cr : results) {
+			content += cr.getMinimal() + System.getProperty("line.separator");
+			buffer.append(cr.toInsertStatemnt());
+//			data.executeSqlStatement(cr.toInsertStatemnt());
+//			String stmnt = cr.toInsertStatemnt() + System.getProperty("line.separator");
+			for(Fold f : cr.getFolds()) {
+				buffer.append(f.toInsertStatemnt());
+//				data.executeSqlStatement(f.toInsertStatemnt());
+//				stmnt = f.toInsertStatemnt();
+				System.out.println(f.getMinimal());
+			}
+			System.out.println(cr.getMinimal());
+		}
+		data.writeToTabSeparatedFile("G:\\test.txt", content);
+		data.writeToTabSeparatedFile("G:\\sql.sql", buffer.toString());
 	}
 	
 	public void readNormalizeWriteWorkflow(DataController datactrl, WekaController wekactrl) {

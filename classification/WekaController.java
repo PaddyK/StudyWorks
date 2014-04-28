@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 
 import data.DataController;
 import data.Microarray;
@@ -132,6 +133,41 @@ public class WekaController {
 		/** Variable Declarations
 		======================================================================================== **/
 		Instances[] resultInstances = new Instances[2];
+		AttributeSelection selection = getFilterFromRanker(featuresToSelect, infoGain, train);
+		
+		if(train != null) {
+			try {
+				resultInstances[0] = Filter.useFilter(train, selection);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			System.err.println("Instances were null in selectFeatures!!");
+		}
+		
+		if(test != null) {
+			try {
+				resultInstances[1] = Filter.useFilter(test, selection);
+			}
+			catch(Exception e) {e.printStackTrace();}
+		}
+		return resultInstances;
+	}
+	
+	/**
+	 * Creates an AttributeSelection which later can be used to filter instances. By doing so
+	 * batch processing from command line is achieved
+	 * @param featuresToSelect	number of feature to select, -1 for default value (10)
+	 * @param infoGain			Information gain for features, -1 for default value (no attributes
+	 * 							discarded)
+	 * @param train				Instances to create filter from
+	 * @return					AttributeSelection to use later to filter instances
+	 */
+	private AttributeSelection getFilterFromRanker(int featuresToSelect, double infoGain, Instances train) {
+		/** Variable Declarations
+		======================================================================================== **/
 		AttributeSelection selection = new AttributeSelection();
 		// Evaluates the worth of an attribute by measuring the information gain with respect to
 		// the class
@@ -168,12 +204,12 @@ public class WekaController {
 		
 		selection.setEvaluator(attributeEvaluator);
 		selection.setSearch(ranker);
+		
 		if(train != null) {
 			try {
 				// This step initializes the filter. If it is reused later, the same setup as for
 				// training data is used. This equals batch processing mode on cmd
 				selection.setInputFormat(train);
-				resultInstances[0] = Filter.useFilter(train, selection);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -182,14 +218,7 @@ public class WekaController {
 		else {
 			System.err.println("Instances were null in selectFeatures!!");
 		}
-		
-		if(test != null) {
-			try {
-				resultInstances[1] = Filter.useFilter(test, selection);
-			}
-			catch(Exception e) {e.printStackTrace();}
-		}
-		return resultInstances;
+		return selection;
 	}
 	
 	/**
@@ -297,65 +326,89 @@ public class WekaController {
 		Instances[] traintest = createTestAndTrainSet(set, size);
 		return new String[]{traintest[0].toString(), traintest[1].toString()};
 	}
-	
-	public void filterInstances(Instances instances, List<String> antibodyIds) {
 		
-	}
-	
 	/**
 	 * Prepares loocv. Creates tests model created from n - 1 patients against each patient for
 	 * the specified classifiers once
-	 * @param arrays		Patients microarrays
-	 * @param data			DataController for writing and deleting temporary arff files
+	 * @param arffFolder	Path pointing to the folder folds for loocv reside
 	 * @param classifiers	Classifiers loocv should be performed for
 	 */
-	public void prepareLoocValidation(ArrayList<Microarray> arrays, DataController data,
-			ArrayList<Classifier> classifiers) {
-		Microarray array;
-		Instances loocTestset;
-		Instances loocTrainingset;
+	public ArrayList<ClassificationResult> prepareLoocValidation(ArrayList<Classifier> classifiers, 
+			String arffFolder, int folds) {
+		int count = 0;
+		// TODO set numClasses dynamically
+		int numClasses = 5;
+		boolean firsttime = true;
+		Instances test;
+		Instances train;
 		Evaluation eval;
+		AttributeSelection selection = null;
 		
-		String fileTrain = "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis" +
-				"\\Arff\\looc_train.arff";
-		String fileTest = "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis" +
-				"\\Arff\\looc_test.arff";
-		
-		ArrayList<Microarray> tested = new ArrayList<Microarray>(arrays.size());
-		ArrayList<Microarray> tmp = new ArrayList<Microarray>(arrays.size());
-		ArrayList<Microarray> trainingset = new ArrayList<Microarray>(arrays.size());
 		ArrayList<ClassificationResult> results = new ArrayList<ClassificationResult>();
-		
-		// This is imperformant since for each classifier read/write operations do occure
-		// however due to classification instances will change
-		// TODO consolidate read/writes for classifiers
-		// TODO implement feature selection as filter
+
+		// Initialize
 		for(int i = 0; i < classifiers.size(); i++) {
 			results.add(new ClassificationResult(classifiers.get(i), "looc-" + new Date().getTime()));
-			
-			do {
-				array = arrays.get(0);
-				arrays.remove(0);
-				tmp.add(array);
-				trainingset.addAll(arrays);
-				trainingset.addAll(tested);
-				
-				data.writeMicroarraysToArffFile(arrays, fileTrain);
-				data.writeMicroarraysToArffFile(tmp, fileTest);
-				
-				tmp.clear();
-				trainingset.clear();
-				tested.add(array);
-				
-				loocTestset = readInstancesFromARFF(fileTest);
-				loocTrainingset = readInstancesFromARFF(fileTrain);
-				
-				eval = performLoocValidation(loocTrainingset, loocTestset, null);
-				results.get(i).addFold(new Fold(eval, "fold-" + new Date().getTime(), 
-						results.get(i).loocId, array.getPatientId()));				
-			}
-			while(!arrays.isEmpty());
+			String[] options =  classifiers.get(i).getOptions();
+			for(String s : options)
+				System.out.println(s);
+			System.out.println(classifiers.get(i).toString());
 		}
+		
+		for(int fold = 1; fold <= folds; fold++) {
+			System.out.println("Fold " + fold);
+			
+			// Load instances from file
+			test = readInstancesFromARFF(arffFolder + "fold-" + fold + "_test.arff");
+			train = readInstancesFromARFF(arffFolder + "fold-" + fold + "_train.arff");
+			test.setClassIndex(test.numAttributes() - 1);
+			train.setClassIndex(train.numAttributes() - 1);
+			
+			// If this is the first fold when obtain a filter to use only those attributes with
+			// highest information gain.
+			// This filter is then used in subsequent folds
+			if(firsttime) {
+				selection = getFilterFromRanker(10, -1, train); // get selection to perform filtering
+			}
+			
+			// Apply the in fold one obtained filter to test and training set
+			try {
+				test = Filter.useFilter(test, selection);
+				train = Filter.useFilter(train, selection);
+				
+				if(firsttime) {
+					firsttime = false; // Set firsttime false since all operations for first run are done
+					numClasses = test.classAttribute().numValues();
+					for(int j = 0; j < results.size(); j++)
+						results.get(j).setInstances(test);
+				}
+			}
+			catch(Exception e) {
+				firsttime = false;
+				System.out.println("Error during application of filter to sets\n=====================");
+				e.printStackTrace();
+			}
+			
+			// For each classifier perform one fold of loocv and add result to results
+			for(int i = 0; i < classifiers.size(); i++) {
+				eval = performLoocValidation(train, test, classifiers.get(i)); // perform loocv
+				// add a new fold to the result for this classifier
+				results.get(i).addFold(new Fold(eval, "fold-" + new Date().getTime(),  
+						results.get(i).loocId, test.relationName()));	
+				
+				String[] options =  classifiers.get(i).getOptions();
+				for(String s : options)
+					System.out.println(s);
+				System.out.println(classifiers.get(i).getClass());
+			}
+		};
+		
+		// Consolidate f1score, precision, recall, etc from folds into one result
+		for(int i = 0; i < classifiers.size(); i++) {
+			results.get(i).finalizeLooc(numClasses);
+		}
+		
+		return results;
 	}
 	
 	private Evaluation performLoocValidation(Instances train, Instances test, Classifier classifier) {
@@ -380,6 +433,60 @@ public class WekaController {
 					+"============================================================");
 			e.printStackTrace();
 		}
+//		System.out.println(eval.correct() + "\t" + eval.incorrect());
 		return eval;
+	}
+
+	/**
+	 * This method creates the folds for loocv. In the arff file for the test set the patient id
+	 * is used as relation name to later retrieve it when performing loocv
+	 * @param gprFolder		Path pointing to folder containing gpr files
+	 * @param arffFolder	Path pointing to folder in which arff files should be written
+	 */
+	public void createNewFolds(String gprFolder, String arffFolder) {
+		int index = 0;
+		int count = 0;
+		Microarray array;
+		DataController dctrl = new DataController();
+		ArrayList<Microarray> arrays = dctrl.gprFilesToMicroarray(gprFolder);
+		ArrayList<Microarray> tested = new ArrayList<Microarray>(arrays.size());
+		ArrayList<Microarray> tmp = new ArrayList<Microarray>(1);
+		ArrayList<Microarray> trainingset = new ArrayList<Microarray>(arrays.size());
+		
+		do {
+			count++;
+			// After the first fold always use first array from list
+			if(count != 1 && index != 0)
+				index = 0;
+			
+			// For the first fold use a random array
+			if(count == 1) {
+				index = new Random().nextInt(arrays.size());
+			}
+			
+			// Remove the array from the list and put it into a temporary variable. Then add this
+			// temporary arry to a list (array will be the only one element in the list, needed for
+			// function in datacontroller). Then add remaining arrays from arrays as well as the 
+			// arrays in tested (arrays which were already tested) into a separate list denoting
+			// the training set for this fold
+			array = arrays.get(index);
+			arrays.remove(index);
+			tmp.add(array);
+			trainingset.addAll(tested);
+			trainingset.addAll(arrays);
+			
+			// Write test and training set for one fold
+			dctrl.writeMicroarraysToArffFile(tmp, arffFolder + "fold-" + count + "_test.arff",
+					array.getPatientId() + "_fold-" + count + "_test_set");
+			dctrl.writeMicroarraysToArffFile(trainingset, arffFolder + "fold-" + count + "_train.arff", 
+					"fold-" + count + "_training_set");
+			
+			// add array used for testing in this fold to set of tested arrays
+			// clear other lists for next fold
+			tested.add(array);
+			tmp.clear();
+			trainingset.clear();			
+		}
+		while(!arrays.isEmpty());
 	}
 }

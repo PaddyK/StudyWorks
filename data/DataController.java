@@ -7,6 +7,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -17,7 +18,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -109,14 +113,14 @@ public class DataController {
 		protoHeader.add("Description");
 		
 		
-		/*try {
+		try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
 		}
 		catch(SQLException e) {
 			System.err.println("Failed to create connection to database: url " + this.databaseUrl +
 					"user " + this.user);
 			e.printStackTrace();
-		}*/
+		}
 	}
 
 	
@@ -238,7 +242,7 @@ public class DataController {
 		// to process them more precisely
 		Hashtable<String, ArrayList<RawDataMini>> rawData = null;
 		PreparedStatement statement = null;
-		/** @TODO dynamically create select part */
+
 		String stmnt = "SELECT rd.Patient_id" +
 				",IF(sdr.Sample_source_name LIKE 'PD%', 'yes', 'no') AS Label " +
 				",ards.DatabaseId";
@@ -853,27 +857,40 @@ public class DataController {
 		return arrays;
 	}
 	
+	public boolean doesFileExist(String path) {
+		File file = new File(path);
+		return file.exists();
+	}
+	
 	/**
 	 * This method writes a list of microarrays to arff file
 	 * @param microarrays	ArrayList of microarrays
 	 * @param destination	Arff file microarrays should b
 	 */
-	public void writeMicroarraysToArffFile(ArrayList<Microarray> microarrays, String destination) {
+	public void writeMicroarraysToArffFile(ArrayList<Microarray> microarrays, String destination,
+			String relation) {
 		FileWriter writer = null;
 		String lineFeed = System.getProperty("line.separator");
 		boolean headerAdded = false;
 		StringBuffer arffContent = new StringBuffer();
 		
+		if(relation == null)
+			arffContent.append("@RELATION " + destination.substring(destination.lastIndexOf("\\") + 1,
+					destination.length()) + lineFeed);
+		else
+			arffContent.append("@RELATION " + relation + lineFeed);
+			
+		
 		for(Microarray microarray : microarrays) {
 			// If arff header was not yet added (i.e. first file) add header
 			if(!headerAdded) {
-				System.out.println("\t\t Append header...");
+//				System.out.println("\t\t Append header...");
 				headerAdded = true;
 				arffContent.append(microarray.getArffHeader());
 				arffContent.append(lineFeed + "@DATA" + lineFeed);
 			}
 			// add data content
-			System.out.println("\tAppend to Arff file...");
+//			System.out.println("\tAppend to Arff file...");
 			arffContent.append(microarray.getNormalizedSignalsAsLine());
 		}
 		
@@ -1025,6 +1042,59 @@ public class DataController {
 	public void removeFile(String target) {
 		File file = new File(target);
 		file.delete();
+	}
+	
+	public void executeBatch(List<String> statements) throws Exception{
+		try {
+			java.sql.Statement stmnt = this.databaseConnection.createStatement();
+			for(String s : statements)
+				stmnt.addBatch(s);
+			System.out.println("Changed Elements in database: " + stmnt.executeBatch());			
+		}
+		catch(BatchUpdateException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+			throw new Exception(e.getMessage());
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+			throw new Exception(e.getMessage());
+		}
+	}
+	
+	public void writeToTabSeparatedFile(String destination, String content) {
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(destination);
+			writer.write(content);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try { writer.close(); }
+			catch (IOException e) {e.printStackTrace();}
+		}
+	}
+	
+	public void appendToTabSeparatedFile(String destination, String content) {
+		FileWriter writer = null;
+
+		try {
+			writer = new FileWriter(destination, true);
+			writer.append(content);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**

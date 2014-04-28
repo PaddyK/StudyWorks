@@ -11,11 +11,14 @@ public class Fold extends ClassificationResult{
 		super(loocId);
 		this.foldId = foldId;
 		this.patientId = patientId;
+		this.eval = new MyEvaluation(eval);
+		
 	}
 	
 	@Override
 	public String toInsertStatemnt() {
-		String command = "INSERT INTO fold (correct" +
+		String linefeed = System.getProperty("line.separator");
+		String command = "INSERT INTO studyworks.fold (correct" +
 				",incorrect" +
 				",accuracy" +
 				",avgRecall" +
@@ -40,16 +43,22 @@ public class Fold extends ClassificationResult{
 				+ "," + eval.getRootMeanSquaredError() 
 				+ "," + eval.getRelativeAbsoluteError() 
 				+ "," + eval.getRootRelativeSquaredError() 
-				+ "," + loocId 
-				+ "," + foldId 
-				+ "," + patientId + ");";
-		command += getInsertForMeasures(foldId, eval.getPrecision(), "precision");
-		command += getInsertForMeasures(foldId, eval.getRecall(), "recall");
-		command += getInsertForMeasures(foldId, eval.getF1Score(), "f1score");
+				+ ",'" + loocId + "'"
+				+ ",'" + foldId  + "'"
+				+ ",'" + patientId + "');" + linefeed;
+		command += getInsertForMeasures(foldId, eval.getPrecision(), "precision") + linefeed;
+		command += getInsertForMeasures(foldId, eval.getRecall(), "recall") + linefeed;
+		command += getInsertForMeasures(foldId, eval.getF1Score(), "f1score") + linefeed;
 		return command;
 	}
 	
 	public String getFoldId() {
 		return foldId;
+	}
+	
+	@Override
+	public String getMinimal() {
+		return foldId + "\t" + eval.getAccuracy() + "\t" + eval.getAvgF1score() + "\t" + eval.getCorrect()
+				+"\t" + eval.getIncorrect();
 	}
 }

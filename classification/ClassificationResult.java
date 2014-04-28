@@ -58,7 +58,8 @@ public class ClassificationResult implements Comparable<MyEvaluation>{
 	}
 	
 	public String toInsertStatemnt() {
-		String command = "INSERT INTO fold (correct" +
+		String newline = System.getProperty("line.separator");
+		String command = "INSERT INTO studyworks.looc (correct" +
 				",incorrect" +
 				",accuracy" +
 				",avgRecall" +
@@ -70,7 +71,7 @@ public class ClassificationResult implements Comparable<MyEvaluation>{
 				",rootRelativeSquaredError" +
 				",loocId" +
 				",classifier" +
-				",classifierOptions)";
+				",classifierOptions) ";
 		command += "Values(" + eval.getCorrect()
 				+ "," + eval.getIncorrect() 
 				+ "," + eval.getAccuracy() 
@@ -82,26 +83,27 @@ public class ClassificationResult implements Comparable<MyEvaluation>{
 				+ "," + eval.getRootMeanSquaredError() 
 				+ "," + eval.getRelativeAbsoluteError() 
 				+ "," + eval.getRootRelativeSquaredError() 
-				+ "," + loocId 
-				+ "," + classifier 
-				+ "," + classifierOptions + ");";
-		command += getInsertForMeasures(loocId, eval.getPrecision(), "precision");
-		command += getInsertForMeasures(loocId, eval.getRecall(), "recall");
-		command += getInsertForMeasures(loocId, eval.getF1Score(), "f1score");
-		for(Fold f : folds)
-			command += f.toInsertStatemnt();
-		command += "INSERT INTO (loocId,antibodyDbId) VALUES";
-		for(String s : antibodyIds)
-			command += "(" + loocId + "," + s + "),";
-		command = command.substring(0, command.length() - 2);
+				+ ",'" + loocId +"'"
+				+ ",'" + classifier +"'"
+				+ ",'" + classifierOptions + "');" + newline;
+		command += getInsertForMeasures(loocId, eval.getPrecision(), "precision") + newline;
+		command += getInsertForMeasures(loocId, eval.getRecall(), "recall") + newline;
+		command += getInsertForMeasures(loocId, eval.getF1Score(), "f1score") + newline;
+//		for(Fold f : folds)
+//			command += f.toInsertStatemnt() + newline;
+//		TODO get things with antibody ids right
+//		command += "INSERT INTO studyworks.antibody (loocId,antibodyDbId) VALUES";
+//		for(String s : antibodyIds)
+//			command += "('" + loocId + "','" + s + "'),";
+//		command = command.substring(0, command.length() - 2);
 		return command;
 	}
 	
 	protected String getInsertForMeasures(String id, double[] arr, String table) {
-		String command = "INSERT INTO " + table + "(eid,value) VALUES(" + id;
+		String command = "INSERT INTO studyworks." + table + "(eid,value) VALUES";
 		for(double d : arr)
-			command += "," + d;
-		command += ");";
+			command += "('" + id +"'," + d + "),";
+		command = command.substring(0, command.length() - 1) + ";";
 		return command;
 	}
 
@@ -130,8 +132,8 @@ public class ClassificationResult implements Comparable<MyEvaluation>{
 		return this.eval.compareTo(eval.getAvgF1score());
 	}
 
-	public void finalizeLooc() {
-		eval = new MyEvaluation(folds);
+	public void finalizeLooc(int classes) {
+		eval = new MyEvaluation(folds, classes);
 	}
 	
 	public void addFold(Fold fold) {
@@ -142,10 +144,15 @@ public class ClassificationResult implements Comparable<MyEvaluation>{
 		antibodyIds = new String[instcs.numAttributes() - 1];
 		int classSeen = 0;
 		for(int i = 0; i < instcs.numAttributes() - 1; i++)
-			if(i == instcs.classIndex())
+			if(instcs.attribute(i).name().equalsIgnoreCase("disease"))
 				classSeen++;
 			else
 				antibodyIds[i] = instcs.attribute(i + classSeen).name();
+	}
+	
+	public String getMinimal() {
+		return loocId + "\t" + eval.getAccuracy() + "\t" + eval.getAvgF1score() + "\t" + eval.getCorrect()
+				+"\t" + eval.getIncorrect() + "\t" + classifier;
 	}
 	
 }
