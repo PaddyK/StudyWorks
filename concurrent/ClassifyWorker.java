@@ -36,7 +36,6 @@ public class ClassifyWorker extends Thread {
 		MyClassifier classifier;
 		Evaluation eval;
 		ConcurrentFold fold;
-		int count = 0;
 
 		// Should run as long as there are elements in the buffer. However it could happen, that the
 		// thread responsible for filling buffer is too slow. Therefore a attribute checked by isDone

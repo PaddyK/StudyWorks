@@ -138,7 +138,7 @@ public class ConcurrentProgram {
 				,"G:\\Documents\\DHBW\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
 		dbWriter.start();
 
-		for(infoGain = 1; infoGain >= 0; infoGain-=0.1) {
+		for(infoGain = 0; infoGain >= 0; infoGain-=0.1) {
 			if(infoGain == 0) infoGain = -1;
 
 			System.out.println("Start loocvs " + infoGain);
@@ -197,7 +197,7 @@ public class ConcurrentProgram {
 				//				}
 				//				System.out.println("\t" + (double)count/(double)size + "%");
 				//				dcontroller.writeToTabSeparatedFile("G:\\sqldump"+count + "_" + new Date().getTime(), implode(looc.generateInsertStatement()));
-				dcontroller.appendToTabSeparatedFile("G:\\Results.csv", looc.toString() + System.getProperty("line.separator"));
+//				dcontroller.appendToTabSeparatedFile("G:\\Results.csv", looc.toString() + System.getProperty("line.separator"));
 				toConsist.add(looc);
 			}
 		}
@@ -252,11 +252,13 @@ public class ConcurrentProgram {
 //		list.add("SimpleCart");
 //		suffix = "RandomForest";
 		
-		prefix = "weka.classifiers.functions.";
+//		prefix = "weka.classifiers.functions.";
 		suffix = "Logistic";
 		suffix = "SimpleLogistic";
 		
-		ConcurrentProgram p = new ConcurrentProgram();
+		suffix = "RandomForest";
+		
+		ConcurrentProgram p = new ConcurrentProgram("patrick","qwert");
 		p.performLoocv(prefix+suffix);
 		System.out.println("Finish");
 	}
