@@ -61,7 +61,6 @@ public class ReadWorker extends Thread{
 
 		while(!paths.isEmpty() && !isInterrupted()) {
 			patharr = paths.poll();
-			System.out.println(patharr[0]);
 			try {
 				set = new MyWekaSet(readInstances(patharr[0]), readInstances(patharr[1]));
 				featureSelection(set);

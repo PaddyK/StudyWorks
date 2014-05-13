@@ -31,10 +31,10 @@ public class DbWriter extends Thread {
 	public void run() {
 		Looc l;
 		while(!isInterrupted()) {
-			if((l = looc.poll()) != null) {
+			while((l = looc.poll()) != null) {
 				List<String> list = l.generateInsertStatement();
 				dctrl.writeToTabSeparatedFile(sqlFolder + "SQLDump_" + l.getId(), implode(list));
-				
+				System.out.println("Persisting " + l.getId());
 				if(dctrl != null)
 					try {
 						dctrl.executeBatch(list);

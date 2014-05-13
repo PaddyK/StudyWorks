@@ -18,7 +18,8 @@ public class LoocConcurrentList extends ConcurrentLinkedQueue<Looc> {
 				wait();
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
-				e.printStackTrace();
+				System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+				//e.printStackTrace();
 				return null;
 			}
 		}

@@ -55,7 +55,8 @@ public class ClassifyWorker extends Thread {
 						String loocId = looc.getId();
 						fold = new ConcurrentFold(loocId +"_fold_" + (looc.getFoldNumber() + 1), loocId
 								,set.getPatientId(), eval);
-						fold.setAntibodies(set.test());
+						if(looc.isAntibodiesSet())
+							fold.setAntibodies(set.test());
 						looc.addFold(fold);
 					}
 				}

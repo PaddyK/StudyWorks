@@ -16,6 +16,7 @@ import weka.core.Instances;
  */
 public class ConcurrentFold extends LoocvComponent {
 	
+	private boolean antibodiesSet;
 	private String loocId;
 	private String patientId;				// Id of the patient used for testing
 	private LinkedList<String> antibodies;	// List of antibodies used in this fold. For each fold
@@ -78,10 +79,7 @@ public class ConcurrentFold extends LoocvComponent {
 				+ ",'" + patientId + "')";
 		commands.add(command);
 		command = "";
-		command += "INSERT INTO studyworks.antibody (foldId,antibodyDbId) VALUES";
-		for(String s : antibodies)
-			command += "('" + id + "','" + s + "'),";
-		commands.add(command.substring(0, command.length() - 1));
+		
 		commands.add(getInsertForMeasures(id, eval.getPrecision(), "precision"));
 		commands.add(getInsertForMeasures(id, eval.getRecall(), "recall"));
 		commands.add(getInsertForMeasures(id, eval.getF1Score(), "f1score"));
@@ -91,5 +89,13 @@ public class ConcurrentFold extends LoocvComponent {
 		commands.add(getInsertForConfusionMatrix(id, eval.getTruepositive(), "truepositive"));
 		commands.add(getInsertForConfusionMatrix(id, eval.getTrueNegatives(), "truenegative"));
 		return commands;
+	}
+	
+	public String generateInsertStatementAntibodies() {
+		String command = "";
+		command += "INSERT INTO studyworks.antibody (foldId,antibodyDbId) VALUES";
+		for(String s : antibodies)
+			command += "('" + id + "','" + s + "'),";
+		return command.substring(0, command.length() - 1);
 	}
 }

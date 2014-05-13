@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1095,6 +1096,39 @@ public class DataController {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public LinkedList<String[]> readClassifierClassifierOptionPairs(String src) {
+		LinkedList<String[]> ret = new LinkedList<String[]>();
+		BufferedReader reader = null;
+		String line;
+		int start;
+		int end;
+		String[] tmp = new String[2];
+		String[] tmp2;
+		try{
+			reader = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(src))));
+			while((line = reader.readLine()) != null) {
+				start = line.indexOf("\"");
+				end = line.indexOf("\"", start + 1);
+				tmp[0] = line.substring(start + 1, end);
+				start = line.indexOf("\"", end + 1);
+				end = line.indexOf("\"", start + 1);
+				tmp[1] = line.substring(start + 1, end);
+				if(tmp[1].equalsIgnoreCase(""))
+					tmp[1] = null;
+				ret.add(tmp);
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		finally {
+			try{reader.close();}
+			catch(IOException e){ e.printStackTrace(); }
+		}
+		return ret;
 	}
 	
 	/**

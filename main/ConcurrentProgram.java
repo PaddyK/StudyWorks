@@ -2,6 +2,7 @@ package main;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -60,6 +61,149 @@ public class ConcurrentProgram {
 				new String[]{"-I", "0", "-M", "500", "-H", "50", "-W" ,"0.0"}));
 	}
 	
+	public void tuneREPTree(boolean tuneVar, boolean tuneFolds, boolean tuneMinNum,
+			boolean tuneCombination, ConcurrentLinkedQueue<Looc> queue) {
+		if(tuneVar)
+		for(double d = 0.00001; d < 1; d*=10) {
+			queue.add(new Looc("loocv-" + new Date().getTime()
+					, "weka.classifiers.trees.REPTree"
+					, new String[]{"-M", "3", "-V", "" + d, "-N", "3", "-S", "1", "-L", "-1"}));
+			try {
+				Thread.sleep(2);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if(tuneFolds)
+		for(int i = 2; i <= 10; i++) {
+			queue.add(new Looc("loocv-" + new Date().getTime()
+					, "weka.classifiers.trees.REPTree"
+					, new String[]{"-M", "2", "-V", "0.0001", "-N", ""+i, "-S", "1", "-L", "-1"}));
+			try {
+				Thread.sleep(2);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if(tuneMinNum)
+		for(int i = 1; i <= 10; i++) {
+			queue.add(new Looc("loocv-" + new Date().getTime()
+					, "weka.classifiers.trees.REPTree"
+					, new String[]{"-M", ""+i, "-V", "0.0001", "-N", "2", "-S", "1", "-L", "-1"}));
+			try {
+				Thread.sleep(2);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if(tuneCombination)
+		for(double d = 0.00001; d < 1; d*=10)
+			for(int i = 2; i <= 10; i++)
+				for(int j = 1; j <= 10; j++) {
+					queue.add(new Looc("loocv-" + new Date().getTime()
+							, "weka.classifiers.trees.REPTree"
+							, new String[]{"-M", ""+j, "-V", ""+d, "-N", "" + i, "-S", "1", "-L", "-1"}));
+					try {
+						Thread.sleep(2);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+	}
+	
+	public void tuneSimpleLogistic(LinkedList<Looc> queue) {
+		for(double d = 0.1; d < 1; d+=0.1) {
+			queue.add(new Looc("looc-" + new Date().getTime()
+					,"weka.classifiers.functions.SimpleLogistic"
+					,new String[]{"-I","0","-M","500","-H", "50","-W","" + d}));
+			try{Thread.sleep(2);}
+			catch(Exception e){e.printStackTrace();}
+		}
+	}
+	
+	public void tuneLibSVM(LinkedList<Looc> queue) {
+		for(int c = -5; c < 16; c+=3)
+			for(int y = -15; y < 4; y+=6)
+				queue.add(new Looc("test-svm" + new Date().getTime(), "weka.classifiers.functions.LibSVM",
+						new String[]{"-S", "0", "-K", "0", "-D", "3", "-G", "" + Math.pow(2, y), "-R", "0.0", "-N", "0.5"
+						,"-M", "40.0", "-C", "" + Math.pow(2, c), "-E", "0.001", "-P", "0.1", "-seed", "1"}));
+	}
+	
+	public void tuneAdaBoostM1(LinkedList<Looc> queue, String src) {
+		// "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\dbExports\\besAccuracy.csv"
+		LinkedList<String[]> list = dcontroller.readClassifierClassifierOptionPairs(src);
+		String tmp[];
+		String tmp2[];
+		String options[];
+		while((tmp = list.poll()) != null) {
+			tmp2 = tmp[1].split(" ");
+			options = new String[9 + tmp2.length + 1];
+			options[0] = "-P";
+			options[1] = "100";
+			options[2] = "-S";
+			options[3] = "1";
+			options[4] = "-I";
+			options[5] = "10";
+			options[6] = "-W";
+			options[7] = tmp[0];
+			options[8] = "--";
+			for(int i = 0; i < tmp2.length; i++)
+				options[i + 9] = tmp2[i];
+			options[options.length - 1] = "-P";
+			queue.add(new Looc("looc" + new Date().getTime()
+					,"weka.classifiers.meta.AdaBoostM1"
+					,options));
+			try {
+				Thread.sleep(2);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void tuneMetaCost(LinkedList<Looc> queue) {
+		String[] options = new String[22];
+		options[0] = "-cost-matrix";
+		options[1] = "\"[0.0 1.0 1.0 1.0 1.0; " +
+				"1.0 0.0 1.0 1.0 1.0; " +
+				"1.0 1.0 0.0 1.0 1.0; " +
+				"1.0 1.0 1.0 0.0 1.0; " +
+				"1.0 1.0 1.0 1.0 0.0]\"";
+		options[2] = "-I";
+		options[3] = "10";
+		options[4] = "-P";
+		options[5] = "100";
+		options[6] = "-S";
+		options[7] = "1";
+		options[8] = "-W";
+		options[9] = "weka.classifiers.trees.REPTree";
+		options[10] = "--";
+		options[11] = "-M";
+		options[12] = "2";
+		options[13] = "-V";
+		options[14] = "0.001";
+		options[15] = "-N";
+		options[16] = "3";
+		options[17] = "-S";
+		options[18] = "1";
+		options[19] = "-L";
+		options[20] = "1";
+		options[21] = "-P";
+		Looc looc = new Looc("looc" + new Date().getTime()
+				,"weka.classifiers.meta.MetaCost"
+				,options);
+		System.out.println(looc.getOptionString());
+		queue.add(looc);
+		
+	}
+	
 	public void configureBayesNet(ConcurrentLinkedQueue<Looc> queue, int estimator, int search) {
 //		String est = "weka.classifiers.bayes.net.estimate.";
 //		String srch = "weka.classifiers.bayes.net.search.local.";
@@ -116,97 +260,73 @@ public class ConcurrentProgram {
 		queue.add(new Looc("loocv-LWL-" + new Date().getTime(), "weka.classifiers.lazy.LWL",null));
 	}
 	
-	public void defaultSettings(String classifier, ConcurrentLinkedQueue<Looc> queue) {
-		queue.add(new Looc("loocv-" + new Date().getTime(), classifier,null));
+	public void initializeQueue(String classifier, String[] options, ConcurrentLinkedQueue<Looc> queue) {
+		queue.add(new Looc("loocv-" + new Date().getTime(), classifier, options));
 	}
 	
-	public void performLoocv(String classifier) {
-		LoocConcurrentList toConsist = new LoocConcurrentList();
-
-		ConcurrentLinkedQueue<Looc> queue;
+	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
+			List<Double> infoGain, List<Integer> numAttributes, int reader) {
 		ConcurrentLinkedQueue<String[]> paths;
 		MyConcurrentList list;
-		double infoGain;
-		int features = -1;
-		Thread reader1 = null;
-		Thread reader2 = null;
+		Thread[] readers = new Thread[reader];
 		Thread classifier1 = null;
+		ConcurrentLinkedQueue<Looc> execute = new ConcurrentLinkedQueue<Looc>();
 		
-		DbWriter dbWriter = new DbWriter(toConsist
-				,username
-				,password
-				,"G:\\Documents\\DHBW\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
-		dbWriter.start();
+		for(double gain : infoGain) {
+			for(int numAttr: numAttributes) {
+				for(Looc l : queue)
+					execute.add(new Looc("looc-" + new Date().getTime(), l.getClassifier(), l.getOptions()));
+				
+				System.out.println("Start loocvs " + infoGain);
+				paths = preparePaths();
+				list = new MyConcurrentList();
 
-		for(infoGain = 0; infoGain >= 0; infoGain-=0.1) {
-			if(infoGain == 0) infoGain = -1;
+				// Prepare classifier
+				//=================================
 
-			System.out.println("Start loocvs " + infoGain);
-			queue = new ConcurrentLinkedQueue<Looc>();
-			paths = preparePaths();
-			list = new MyConcurrentList();
+				// Start threads
+				//=======================================
+				for(int i = 0; i < readers.length; i++) {
+					readers[i] = new ReadWorker(list, paths, numAttr, gain);
+					readers[i].setName("reader" + (i+1));
+					readers[i].start();
+				}
 
-			// Prepare classifier
-			//=================================
-			defaultSettings(classifier, queue);
+				classifier1 = new ClassifyWorker(execute, list);
+				classifier1.setName("classifier1");
+				classifier1.start();
 
-			// Start threads
-			//=======================================
+				// Wait for threads
+				//============================================
+				try {
+					for(int i = 0; i < readers.length; i++)
+						readers[i].join();
+					list.setDone();
+					classifier1.join();
+				}
+				catch(InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+					break;
+				}
+				System.out.println("Finished classifying");
+				System.out.println("Start persisting in database");
+				int count=0;
 
-			reader1 = new ReadWorker(list, paths, features, infoGain);
-			reader1.setName("reader1");
-			reader1.start();
-			reader2 = new ReadWorker(list, paths, features, infoGain);
-			reader2.setName("reader2");
-			reader2.start();
-
-			classifier1 = new ClassifyWorker(queue, list);
-			classifier1.setName("classifier1");
-			classifier1.start();
-
-			// Wait for threads
-			//============================================
-			try {
-				reader1.join();
-				reader2.join();
-				list.setDone();
-				classifier1.join();
+				// Persist results
+				//===============================================
+				for(Looc looc : execute) {
+					count++;
+					looc.setFeatures(numAttr);
+					looc.setInfoGain(gain);
+					looc.consolidateFolds(5);
+					System.out.println("\tlooc " + count + ":\t" + looc.toString());
+					dcontroller.appendToTabSeparatedFile("G:\\Results_Param_Tuning.csv"
+							, looc.toString() + System.getProperty("line.separator"));
+					toConsist.add(looc);
+				}
+				execute.clear();
 			}
-			catch(InterruptedException e) {
-				e.printStackTrace();
-				Thread.currentThread().interrupt();
-				break;
-			}
-			System.out.println("Finished classifying");
-			System.out.println("Start persisting in database");
-			int count=0;
-
-			// Persist results
-			//===============================================
-			for(Looc looc : queue) {
-				count++;
-				looc.setFeatures(features);
-				looc.setInfoGain(infoGain);
-				looc.consolidateFolds(5);
-				System.out.println("\tlooc " + count + ":\t" + looc.toString());
-				//				try {
-				//					dcontroller.executeBatch(looc.generateInsertStatement());
-				//				}
-				//				catch(Exception e) {
-				//					dcontroller.writeToTabSeparatedFile("G:\\sqldump"+count + "_" + new Date().getTime(), implode(looc.generateInsertStatement()));
-				//				}
-				//				System.out.println("\t" + (double)count/(double)size + "%");
-				//				dcontroller.writeToTabSeparatedFile("G:\\sqldump"+count + "_" + new Date().getTime(), implode(looc.generateInsertStatement()));
-//				dcontroller.appendToTabSeparatedFile("G:\\Results.csv", looc.toString() + System.getProperty("line.separator"));
-				toConsist.add(looc);
-			}
-		}
-		dbWriter.interrupt();
-		try {
-			dbWriter.join();
-		} catch (InterruptedException e) {
-			dbWriter.interrupt();
-			e.printStackTrace();
 		}
 	}
 	
@@ -227,39 +347,55 @@ public class ConcurrentProgram {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		String prefix = "weka.classifiers.rules.";
-		String suffix = "ConjunctiveRule";
-//		suffix = "DecisionTable";			// yet to do
-//		suffix = "DTNB";					// Out of memory (one reader only)
-//		suffix = "JRip";
-//		suffix = "NNge";
-//		suffix = "OneR";
-//		suffix = "PART";					// Out of memory (one reader only)
-//		suffix = "Ridor";					// Out of memory first fold
-		prefix = "weka.classifiers.trees.";
-
-//		list.add("J48");
-//		list.add("RandomTree");
-//		list.add("BFTree");
-//		list.add("DecisionStump");
-//		list.add("FT");
-//		list.add("J48graft");
-//		list.add("LADTree");
-//		list.add("LMT");
-//		list.add("NBTree");					^		//Out of memory and then took forever
-//		list.add("REPTree");
-//		list.add("SimpleCart");
-//		suffix = "RandomForest";
-		
-//		prefix = "weka.classifiers.functions.";
-		suffix = "Logistic";
-		suffix = "SimpleLogistic";
-		
-		suffix = "RandomForest";
-		
+		int numLoocs = 1;
+		int numDbWriter = 1;
+		String prefix = "weka.classifiers.trees.";
+		String suffix = "REPTree";
+		LoocConcurrentList toConsist = new LoocConcurrentList();
+		LinkedList<Looc> queue = new LinkedList<Looc>();
+		LinkedList<Looc> execute = new LinkedList<Looc>();
+		ArrayList<Integer> numAttributes = new ArrayList<Integer>();
+		ArrayList<Double> infoGain = new ArrayList<Double>();
 		ConcurrentProgram p = new ConcurrentProgram("patrick","qwert");
-		p.performLoocv(prefix+suffix);
-		System.out.println("Finish");
+		DbWriter[] writers = new DbWriter[numDbWriter];
+		
+		for(int i = 0; i < writers.length; i++) {
+			writers[i] = new DbWriter(toConsist
+					,"patrick"
+					,"qwert"
+					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+			writers[i].setName("dbWriter" + (i+1));
+			writers[i].start();
+		}
+		
+		numAttributes.add(-1);
+		infoGain.add(-1.0);
+//		p.tuneAdaBoostM1(queue, "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\dbExports\\besAccuracy.csv");
+		p.tuneMetaCost(queue);
+		
+		do{
+			while(execute.size() < numLoocs && !queue.isEmpty()) {
+				execute.add(queue.poll());
+			}			
+			p.performLoocv(execute
+					,toConsist
+					,infoGain
+					,numAttributes
+					,4);
+			execute.clear();
+		}while(!queue.isEmpty());
+		
+		for(int i = 0; i < writers.length; i++)
+			writers[i].interrupt();
+		try {
+			for(int i = 0; i < writers.length; i++)
+				writers[i].join();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+			e.printStackTrace();
+		}
+
+		System.out.println("Finish\n===========");
 	}
 }

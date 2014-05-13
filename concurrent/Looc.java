@@ -13,6 +13,7 @@ import classification.MyEvaluation;
  *
  */
 public class Looc extends LoocvComponent{
+	private boolean antibodiesSet;
 	/**
 	 * Holds the folds loocv consists of
 	 */
@@ -41,6 +42,7 @@ public class Looc extends LoocvComponent{
 		else
 			this.options = getOptionString();
 		this.discretize = false;
+		antibodiesSet = false;
 		
 	}	
 	@Override
@@ -88,8 +90,12 @@ public class Looc extends LoocvComponent{
 		commands.add(getInsertForConfusionMatrix(id, eval.getFalsenegative(), "falsenegative"));
 		commands.add(getInsertForConfusionMatrix(id, eval.getTruepositive(), "truepositive"));
 		commands.add(getInsertForConfusionMatrix(id, eval.getTrueNegatives(), "truenegative"));
-		for(ConcurrentFold f : folds)
+
+		for(ConcurrentFold f : folds) {
 			commands.addAll(f.generateInsertStatement());
+			if(antibodiesSet)
+				commands.add(f.generateInsertStatementAntibodies());
+		}
 		return commands;
 	}
 		
@@ -98,7 +104,7 @@ public class Looc extends LoocvComponent{
 	 * @return	String array containing classifier options
 	 */
 	public synchronized String[] getOptions() {
-		return classifierOptions;
+		return classifierOptions.clone();
 	}
 	
 	/**
@@ -177,6 +183,14 @@ public class Looc extends LoocvComponent{
 	}
 	public void setDiscretize(boolean discretize) {
 		this.discretize = discretize;
+	}
+
+	public boolean isAntibodiesSet() {
+		return antibodiesSet;
+	}
+
+	public void setAntibodiesSet(boolean antibodiesSet) {
+		this.antibodiesSet = antibodiesSet;
 	}
 	
 }
