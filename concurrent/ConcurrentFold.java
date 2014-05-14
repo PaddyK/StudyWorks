@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import classification.MyEvaluation;
-
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
@@ -29,7 +27,7 @@ public class ConcurrentFold extends LoocvComponent {
 		super(foldId);
 		this.patientId = patientId;
 		antibodies = new LinkedList<String>();
-		this.eval = new MyEvaluation(eval);
+		this.eval = new MyConcurrentEvaluation(eval);
 		this.loocId = loocId;
 	}
 	

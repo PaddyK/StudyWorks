@@ -1,5 +1,4 @@
 package data;
-import normalization.Normalization;
 
 /**
  * This class represents a microarray. A microarray consists of 48 blocks. Each block of 22 * 22

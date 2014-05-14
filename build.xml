@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+	<project name="StudyWorks" default="build_main" basedir=".">
+		<echoproperties />
+		<property environment="env"/>
+		<property name="build.dir" value="build"/>
+		<property name="target.release" value="1.7"/>
+		<property name="source.release" value="1.7" />
+		
+		<path id="external_jars">
+			<fileset dir="lib">
+				<include name="*.jar"/>
+			</fileset>
+			<pathelement path="${build.dir}" />
+			<pathelement path="${build.dir}/classification" />
+			<pathelement path="${build.dir}/concurrent" />
+			<pathelement path="${build.dir}/data" />
+			<pathelement path="${build.dir}/main" />
+		</path>
+		
+		<target name="build_main" depends="build_data,build_concurrent,build_classification"
+			description="Compile files for StudyWorks project concurrent">
+			<mkdir dir="${build.dir}"/>
+			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
+				<src path="main" />
+				<classpath refid="external_jars"/>
+			</javac>
+		</target>
+		
+		<target name="build_classification" description="Compile files for StudyWorks project concurrent">
+			<mkdir dir="${build.dir}"/>
+			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
+				<src path="classification" />
+				<classpath refid="external_jars"/>
+			</javac>
+		</target>
+		
+		<target name="build_concurrent" depends="build_data" description="Compiles package concurrent">
+			<mkdir dir="${build.dir}"/>
+			<javac destdir="${build.dir}"  source="${source.release}" target="${target.release}">
+				<src path="concurrent"/>
+				<classpath refid="external_jars"/>
+			</javac>
+		</target>
+		
+		<target name="build_data" description="Compiling package data">
+			<mkdir dir="${build.dir}"/>
+			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
+				<src path="data"/>
+				<classpath refid="external_jars"/>
+			</javac>
+		</target>
+		
+		<target name="clean">
+			<delete>
+				<fileset dir="${build.dir}">
+					<include name="**/*.class"/>
+				</fileset>
+			</delete>
+		</target>
+		
+		<target name="package" depends="build_main" description="create executable jar file">
+			<jar destfile="lib/StudyWorks.jar"
+				basedir="${build.dir}"
+				includes="**/*.class">
+				<manifest>
+					<attribute name="Main-Class" value="main.ConcurrentProgram"/>
+				</manifest>
+			</jar>
+		</target>
+	</project>

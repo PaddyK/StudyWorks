@@ -1,5 +1,6 @@
 package main;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -348,56 +349,65 @@ public class ConcurrentProgram {
 	}
 
 	public static void main(String[] args) {
-		int numLoocs = 5;
-		int numDbWriter = 8;
-		int numReader = 4;
 		
-		LoocConcurrentList toConsist = new LoocConcurrentList();
-		LinkedList<Looc> queue = new LinkedList<Looc>();
-		LinkedList<Looc> execute = new LinkedList<Looc>();
-		ArrayList<Integer> numAttributes = new ArrayList<Integer>();
-		ArrayList<Double> infoGain = new ArrayList<Double>();
-		ConcurrentProgram p = new ConcurrentProgram("patrick","qwert");
-		DbWriter[] writers = new DbWriter[numDbWriter];
-		
-		for(int i = 0; i < writers.length; i++) {
-			writers[i] = new DbWriter(toConsist
-					,"patrick"
-					,"qwert"
-					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
-			writers[i].setName("dbWriter" + (i+1));
-			writers[i].start();
-		}
-		
-		numAttributes.add(-1);
-		infoGain.add(0.2);
-//		p.tuneAdaBoostM1(queue, "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\dbExports\\besAccuracy.csv");
-//		p.tuneMetaCost(queue);
-//		p.tuneSimpleLogistic(queue);
-		p.tuneREPTree(false, false, true, false, queue);
-		do{
-			while(execute.size() < numLoocs && !queue.isEmpty()) {
-				execute.add(queue.poll());
-			}			
-			p.performLoocv(execute
-					,toConsist
-					,infoGain
-					,numAttributes
-					,numReader);
-			execute.clear();
-		}while(!queue.isEmpty());
-		
-		for(int i = 0; i < writers.length; i++)
-			writers[i].interrupt();
+		System.out.println("RUNS");
 		try {
-			for(int i = 0; i < writers.length; i++)
-				writers[i].join();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		System.out.println("Finish\n===========");
+		return;
+//		int numLoocs = 5;
+//		int numDbWriter = 8;
+//		int numReader = 4;
+//		
+//		LoocConcurrentList toConsist = new LoocConcurrentList();
+//		LinkedList<Looc> queue = new LinkedList<Looc>();
+//		LinkedList<Looc> execute = new LinkedList<Looc>();
+//		ArrayList<Integer> numAttributes = new ArrayList<Integer>();
+//		ArrayList<Double> infoGain = new ArrayList<Double>();
+//		ConcurrentProgram p = new ConcurrentProgram("patrick","qwert");
+//		DbWriter[] writers = new DbWriter[numDbWriter];
+//		
+//		for(int i = 0; i < writers.length; i++) {
+//			writers[i] = new DbWriter(toConsist
+//					,"patrick"
+//					,"qwert"
+//					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+//			writers[i].setName("dbWriter" + (i+1));
+//			writers[i].start();
+//		}
+//		
+//		numAttributes.add(-1);
+//		infoGain.add(0.2);
+////		p.tuneAdaBoostM1(queue, "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\dbExports\\besAccuracy.csv");
+////		p.tuneMetaCost(queue);
+////		p.tuneSimpleLogistic(queue);
+//		p.tuneREPTree(false, false, true, false, queue);
+//		do{
+//			while(execute.size() < numLoocs && !queue.isEmpty()) {
+//				execute.add(queue.poll());
+//			}			
+//			p.performLoocv(execute
+//					,toConsist
+//					,infoGain
+//					,numAttributes
+//					,numReader);
+//			execute.clear();
+//		}while(!queue.isEmpty());
+//		
+//		for(int i = 0; i < writers.length; i++)
+//			writers[i].interrupt();
+//		try {
+//			for(int i = 0; i < writers.length; i++)
+//				writers[i].join();
+//		} catch (InterruptedException e) {
+//			Thread.currentThread().interrupt();
+//			System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+//			e.printStackTrace();
+//		}
+//
+//		System.out.println("Finish\n===========");
 	}
 }

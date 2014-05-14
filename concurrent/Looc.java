@@ -3,8 +3,6 @@ package concurrent;
 import java.util.ArrayList;
 import java.util.List;
 
-import classification.Fold;
-import classification.MyEvaluation;
 /**
  * Represents one classification useing Leave One Out Cross Validation. This class holds all the
  * folds and summarizes their results by taking the mean of each measure. It also holds the
@@ -162,7 +160,7 @@ public class Looc extends LoocvComponent{
 	 * measures. incorrect and correct values are simply added
 	 */
 	public void consolidateFolds(int numClasses) {
-		eval = new MyEvaluation(folds, numClasses);
+		eval = new MyConcurrentEvaluation(folds, numClasses);
 	}
 	
 	@Override

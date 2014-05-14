@@ -2,8 +2,6 @@ package concurrent;
 
 import java.util.List;
 
-import classification.MyEvaluation;
-
 /**
  * Super class for fold and looc.
  * @author Patrick
@@ -11,7 +9,7 @@ import classification.MyEvaluation;
  */
 public abstract class LoocvComponent {
 	protected String id;
-	protected MyEvaluation eval;
+	protected MyConcurrentEvaluation eval;
 	
 	public LoocvComponent(String id) {
 		this.id = id;
@@ -76,5 +74,5 @@ public abstract class LoocvComponent {
 		return ret/values.length;
 	}
 	
-	public MyEvaluation getMyEvaluation() { return eval; }
+	public MyConcurrentEvaluation getMyConcurrentEvaluation() { return eval; }
 }

@@ -1,11 +1,8 @@
 package classification;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import weka.core.Instances;
-import weka.classifiers.Evaluation;
 import weka.classifiers.Classifier;
 
 /**

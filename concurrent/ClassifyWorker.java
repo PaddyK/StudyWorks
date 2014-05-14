@@ -1,12 +1,8 @@
 package concurrent;
 
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import classification.Fold;
 
 /**
  * Worker thraet performing classification for one fold with all classifiers specified

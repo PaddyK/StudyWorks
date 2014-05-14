@@ -1,13 +1,10 @@
-package classification;
+package concurrent;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import concurrent.ConcurrentFold;
 
 import weka.classifiers.Evaluation;
 
-public class MyEvaluation implements Comparable<Double>{
+public class MyConcurrentEvaluation implements Comparable<Double>{
 	private int correct;
 	private int incorrect;
 	private double accuracy;
@@ -83,11 +80,11 @@ public class MyEvaluation implements Comparable<Double>{
 		}
 	}
 	
-	public MyEvaluation() {
+	public MyConcurrentEvaluation() {
 		
 	}
 	
-	public MyEvaluation(Evaluation eval) {
+	public MyConcurrentEvaluation(Evaluation eval) {
 		recall = new double[eval.confusionMatrix().length];
 		precision = new double[eval.confusionMatrix().length];
 		f1score = new double[eval.confusionMatrix().length];
@@ -131,8 +128,8 @@ public class MyEvaluation implements Comparable<Double>{
 		}
 		checkNaN();
 	}
-	
-	public MyEvaluation(ArrayList<Fold> folds, int classes) {
+		
+	public MyConcurrentEvaluation(List<ConcurrentFold> folds, int classes) {
 
 		recall = new double[classes];
 		precision = new double[classes];
@@ -140,13 +137,12 @@ public class MyEvaluation implements Comparable<Double>{
 		truepositive = new double[classes];
 		falsepositive = new double[classes];
 		falsenegative = new double[classes];
-		truenegative = new double[classes];
 		areaUnderRoc = new double[classes];
-		accuracy = 0;
+		truenegative = new double[classes];
 		
-		MyEvaluation eval;
-		for(Fold f : folds) {
-			eval = f.getMyEvaluation();
+		MyConcurrentEvaluation eval;
+		for(ConcurrentFold f : folds) {
+			eval = f.getMyConcurrentEvaluation();
 			for(int i = 0; i < 5; i++) {
 				precision[i] += eval.getClassPrecision(i);
 				f1score[i] += eval.getClassF1Score(i);

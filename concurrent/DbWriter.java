@@ -32,7 +32,7 @@ public class DbWriter extends Thread {
 		Looc l;
 		while(!isInterrupted()) {
 			while((l = looc.poll()) != null) {
-				if(l.getMyEvaluation().getCorrect() + l.getMyEvaluation().getIncorrect() == 318) {
+				if(l.getMyConcurrentEvaluation().getCorrect() + l.getMyConcurrentEvaluation().getIncorrect() == 318) {
 					List<String> list = l.generateInsertStatement();
 					dctrl.writeToTabSeparatedFile(sqlFolder + "SQLDump_" + l.getId(), implode(list));
 					System.out.println("Persisting " + l.getId());
