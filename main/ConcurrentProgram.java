@@ -62,7 +62,7 @@ public class ConcurrentProgram {
 	}
 	
 	public void tuneREPTree(boolean tuneVar, boolean tuneFolds, boolean tuneMinNum,
-			boolean tuneCombination, ConcurrentLinkedQueue<Looc> queue) {
+			boolean tuneCombination, LinkedList<Looc> queue) {
 		if(tuneVar)
 		for(double d = 0.00001; d < 1; d*=10) {
 			queue.add(new Looc("loocv-" + new Date().getTime()
@@ -92,7 +92,7 @@ public class ConcurrentProgram {
 		for(int i = 1; i <= 10; i++) {
 			queue.add(new Looc("loocv-" + new Date().getTime()
 					, "weka.classifiers.trees.REPTree"
-					, new String[]{"-M", ""+i, "-V", "0.0001", "-N", "2", "-S", "1", "-L", "-1"}));
+					, new String[]{"-M", ""+i, "-V", "0.001", "-N", "3", "-S", "1", "-L", "-1"}));
 			try {
 				Thread.sleep(2);
 			} catch (InterruptedException e) {
@@ -103,8 +103,8 @@ public class ConcurrentProgram {
 		
 		if(tuneCombination)
 		for(double d = 0.00001; d < 1; d*=10)
-			for(int i = 2; i <= 10; i++)
-				for(int j = 1; j <= 10; j++) {
+			for(int i = 2; i <= 20; i++)
+				for(int j = 2; j <= 10; j++) {
 					queue.add(new Looc("loocv-" + new Date().getTime()
 							, "weka.classifiers.trees.REPTree"
 							, new String[]{"-M", ""+j, "-V", ""+d, "-N", "" + i, "-S", "1", "-L", "-1"}));
@@ -118,18 +118,20 @@ public class ConcurrentProgram {
 	}
 	
 	public void tuneSimpleLogistic(LinkedList<Looc> queue) {
-		for(double d = 0.1; d < 1; d+=0.1) {
-			queue.add(new Looc("looc-" + new Date().getTime()
-					,"weka.classifiers.functions.SimpleLogistic"
-					,new String[]{"-I","0","-M","500","-H", "50","-W","" + d}));
-			try{Thread.sleep(2);}
-			catch(Exception e){e.printStackTrace();}
-		}
+		for(int hstop = 20; hstop <= 100; hstop+=20)
+			for(int iter = 200; iter <=1000; iter+=200)
+				for(double d = 0.1; d < 1; d+=0.1) {
+					queue.add(new Looc("looc-" + new Date().getTime()
+							,"weka.classifiers.functions.SimpleLogistic"
+							,new String[]{"-I","0","-M","" + iter,"-H", "" + hstop,"-W","" + d}));
+					try{Thread.sleep(2);}
+					catch(Exception e){e.printStackTrace();}
+				}
 	}
 	
 	public void tuneLibSVM(LinkedList<Looc> queue) {
-		for(int c = -5; c < 16; c+=3)
-			for(int y = -15; y < 4; y+=6)
+		for(int c = -5; c < 16; c+=1)
+			for(int y = -15; y < 4; y+=1)
 				queue.add(new Looc("test-svm" + new Date().getTime(), "weka.classifiers.functions.LibSVM",
 						new String[]{"-S", "0", "-K", "0", "-D", "3", "-G", "" + Math.pow(2, y), "-R", "0.0", "-N", "0.5"
 						,"-M", "40.0", "-C", "" + Math.pow(2, c), "-E", "0.001", "-P", "0.1", "-seed", "1"}));
@@ -271,11 +273,10 @@ public class ConcurrentProgram {
 		Thread[] readers = new Thread[reader];
 		Thread classifier1 = null;
 		ConcurrentLinkedQueue<Looc> execute = new ConcurrentLinkedQueue<Looc>();
+		execute.addAll(queue);
 		
 		for(double gain : infoGain) {
 			for(int numAttr: numAttributes) {
-				for(Looc l : queue)
-					execute.add(new Looc("looc-" + new Date().getTime(), l.getClassifier(), l.getOptions()));
 				
 				System.out.println("Start loocvs " + infoGain);
 				paths = preparePaths();
@@ -347,10 +348,10 @@ public class ConcurrentProgram {
 	}
 
 	public static void main(String[] args) {
-		int numLoocs = 1;
-		int numDbWriter = 1;
-		String prefix = "weka.classifiers.trees.";
-		String suffix = "REPTree";
+		int numLoocs = 5;
+		int numDbWriter = 8;
+		int numReader = 4;
+		
 		LoocConcurrentList toConsist = new LoocConcurrentList();
 		LinkedList<Looc> queue = new LinkedList<Looc>();
 		LinkedList<Looc> execute = new LinkedList<Looc>();
@@ -369,10 +370,11 @@ public class ConcurrentProgram {
 		}
 		
 		numAttributes.add(-1);
-		infoGain.add(-1.0);
+		infoGain.add(0.2);
 //		p.tuneAdaBoostM1(queue, "G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\dbExports\\besAccuracy.csv");
-		p.tuneMetaCost(queue);
-		
+//		p.tuneMetaCost(queue);
+//		p.tuneSimpleLogistic(queue);
+		p.tuneREPTree(false, false, true, false, queue);
 		do{
 			while(execute.size() < numLoocs && !queue.isEmpty()) {
 				execute.add(queue.poll());
@@ -381,7 +383,7 @@ public class ConcurrentProgram {
 					,toConsist
 					,infoGain
 					,numAttributes
-					,4);
+					,numReader);
 			execute.clear();
 		}while(!queue.isEmpty());
 		

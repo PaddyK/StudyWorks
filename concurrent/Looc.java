@@ -31,10 +31,12 @@ public class Looc extends LoocvComponent{
 	private double infoGain;
 	private int features;
 	private boolean discretize;
+	private int numFolds;
 	
 	public Looc(String loocId, String classifier, String[] options) {
 		super(loocId);
 		folds = new ArrayList<ConcurrentFold>();
+		numFolds = 0;
 		classifierOptions = options;
 		this.classifier = classifier;
 		if(options == null)
@@ -104,7 +106,10 @@ public class Looc extends LoocvComponent{
 	 * @return	String array containing classifier options
 	 */
 	public synchronized String[] getOptions() {
-		return classifierOptions.clone();
+		if(classifierOptions != null)
+			return classifierOptions.clone();
+		else
+			return null;
 	}
 	
 	/**
@@ -112,6 +117,7 @@ public class Looc extends LoocvComponent{
 	 * @param fold
 	 */
 	public synchronized void addFold(ConcurrentFold fold) {
+		numFolds++;
 		folds.add(fold);
 	}
 	
@@ -136,7 +142,7 @@ public class Looc extends LoocvComponent{
 	}
 	
 	public synchronized int getFoldNumber() {
-		return this.folds.size();
+		return this.numFolds;
 	}
 
 	public double getInfoGain() {
