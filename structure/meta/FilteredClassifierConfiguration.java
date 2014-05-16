@@ -18,5 +18,10 @@ public class FilteredClassifierConfiguration implements Component {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
+	@Override
+	public LinkedList<Looc> roughSearch() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

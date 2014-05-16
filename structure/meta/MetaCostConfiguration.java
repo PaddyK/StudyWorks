@@ -38,5 +38,11 @@ public class MetaCostConfiguration implements Component {
 		}
 		return list;
 	}
+
+	@Override
+	public LinkedList<Looc> roughSearch() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

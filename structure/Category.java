@@ -42,4 +42,12 @@ public class Category implements Component {
 	public Factory getFactory() {
 		return factory;
 	}
+	
+	public LinkedList<Looc> roughSearch() {
+		LinkedList<Looc> ret = new LinkedList<Looc>();
+		for(Component component : elements)
+			ret.addAll(component.roughSearch());
+		return ret;
+		
+	}
 }

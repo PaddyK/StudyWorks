@@ -29,10 +29,17 @@ public class KStarConfiguration implements Component {
 			ret.add(new Looc("" + milisec++
 					,"weka.classifiers.lazy.KStar"
 					,new String[]{"-B", "" + b,"-M","a"}));
+
 			ret.add(new Looc("" + milisec++
 					,"weka.classifiers.lazy.KStar"
 					,new String[]{"-B", "" + b, "-E", "-M","a"}));
 		}
+		return null;
+	}
+
+	@Override
+	public LinkedList<Looc> roughSearch() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

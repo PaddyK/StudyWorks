@@ -32,5 +32,11 @@ public class SimpleLogisticConfiguration implements Component {
 				}
 		return queue;
 	}
+
+	@Override
+	public LinkedList<Looc> roughSearch() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

@@ -41,6 +41,12 @@ public class LibSVMConfiguration implements Component {
 					               ,"0.1","-seed", "1"}));
 		return ret;
 	}
+
+	@Override
+	public LinkedList<Looc> roughSearch() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	
 }
