@@ -28,4 +28,8 @@ public final class Utils {
 	public static boolean isTune(String[] args) {
 		return checkArgs("-t", args);
 	}
+	
+	public static boolean isRoughSearch(String[] args) {
+		return checkArgs("-s", args);
+	}
 }

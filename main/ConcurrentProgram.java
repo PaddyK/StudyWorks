@@ -124,22 +124,24 @@ public class ConcurrentProgram {
 		LoocConcurrentList toConsist     	= new LoocConcurrentList();
 		ArrayList<Integer> numAttributes 	= new ArrayList<Integer>();
 		
-		for(int i = 0; i < writers.length; i++) {
-			writers[i] = new DbWriter(toConsist
-					,"patrick"
-					,"qwert"
-					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
-			writers[i].setName("dbWriter" + (i+1));
-			writers[i].start();
-		}
+//		for(int i = 0; i < writers.length; i++) {
+//			writers[i] = new DbWriter(toConsist
+//					,"patrick"
+//					,"qwert"
+//					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+//			writers[i].setName("dbWriter" + (i+1));
+//			writers[i].start();
+//		}
 		
 		numAttributes.add(-1);
 		infoGain.add(0.2);
 
-		if(Utils.isBaseline(args));
+		if(Utils.isBaseline(args))
 			queue = new Category(Utils.extractClassifierToConfigure(args)).baseline();
-		if(Utils.isTune(args));
+		if(Utils.isTune(args))
 			queue = new Category(Utils.extractClassifierToConfigure(args)).tune();
+		if(Utils.isRoughSearch(args))
+			queue = new Category(Utils.extractClassifierToConfigure(args)).roughSearch();
 
 		do{
 			while(execute.size() < numLoocs && !queue.isEmpty()) {

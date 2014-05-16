@@ -35,7 +35,7 @@ public class Category implements Component {
 	public LinkedList<Looc> tune() {
 		LinkedList<Looc> ret = new LinkedList<Looc>();
 		for(Component component : elements)
-			ret.addAll(component.baseline());
+			ret.addAll(component.tune());
 		return ret;
 	}
 	
