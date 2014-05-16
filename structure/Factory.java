@@ -16,9 +16,15 @@ public class Factory {
 		switch(classifierName) {
 		case "AdaBoostM1": component = new AdaBoostM1Configuration(defaultClassifier); break;
 		case "LibSVM": component = new LibSVMConfiguration(); break;
-		case "KStar" : component = new KStarConfiguration();
+		case "KStar" : component = new KStarConfiguration(); break;
+		case "MetaCost" : component = new MetaCostConfiguration(defaultClassifier); break;
+		case "Bagging" : component = new BaggingConfiguration(defaultClassifier); break;
 		default: component = null;
 		}
 		return component;
+	}
+	
+	public void setMetaClassifier(String classifier) {
+		defaultClassifier = classifier;
 	}
 }

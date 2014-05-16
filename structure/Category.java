@@ -32,4 +32,8 @@ public class Category implements Component {
 			ret.addAll(component.baseline());
 		return ret;
 	}
+	
+	public Factory getFactory() {
+		return factory;
+	}
 }

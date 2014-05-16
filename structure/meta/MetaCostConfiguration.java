@@ -6,13 +6,14 @@ import java.util.LinkedList;
 import structure.Component;
 import concurrent.Looc;
 
-public class BaggingConfiguration implements Component {
-	String name;
-	String options;
+public class MetaCostConfiguration implements Component {
+	private String name;
+	private String options;
 	
-	public BaggingConfiguration(String defaultClassifier) {
-		name = "weka.classifiers.meta.Bagging";
-		options = "-P 100 -S 1 -I 10 -W " + defaultClassifier;
+	public MetaCostConfiguration(String defaultClassifier) {
+		name = "weka.classifiers.meta.MetaCost";
+		options = "-cost-matrix \"[0.0 1.0 1.0 1.0 1.0; 1.0 0.0 1.0 1.0 1.0; 1.0 1.0 0.0 1.0 1.0; 1.0 1.0 1.0 0.0 1.0; 1.0 1.0 1.0 1.0 0.0]\" " +
+		          "-I 10 -P 100 -S 1 -W " + defaultClassifier;
 	}
 	
 	@Override
@@ -29,8 +30,8 @@ public class BaggingConfiguration implements Component {
 		for(int it=5; it<=50; it+=5) {
 			for(int p = 10; p<=100; p+=10) {
 				tmp = options.split(" ");
-				tmp[5] = "" + it;
-				tmp[1] = "" + p;
+				tmp[3] = "" + it;
+				tmp[5] = "" + p;
 				list.add(new Looc("looc" + new Date().getTime(), name, tmp));
 				try {
 					Thread.sleep(2);
