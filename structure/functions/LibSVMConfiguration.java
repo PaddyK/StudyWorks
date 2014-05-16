@@ -33,9 +33,10 @@ public class LibSVMConfiguration implements Component {
 	@Override
 	public LinkedList<Looc> tune() {
 		LinkedList<Looc> ret = new LinkedList<Looc>();
-		for(int c = -5; c <= 15; c+=2)
-			for(int y = -15; y <= 3; y+=3)
-				ret.add(new Looc("looc-" + new Date().getTime(), classifier,
+		long milisec = new Date().getTime();
+		for(int c = -5; c <= 15; c+=1)
+			for(int y = -15; y <= 3; y+=1)
+				ret.add(new Looc("looc-" + milisec++, classifier,
 						new String[]{"-S", "0", "-K", "0", "-D", "3", "-G", "" + Math.pow(2, y), "-R", "0.0"
 					               ,"-N", "0.5","-M", "40.0", "-C", "" + Math.pow(2, c), "-E", "0.001", "-P"
 					               ,"0.1","-seed", "1"}));
@@ -44,8 +45,15 @@ public class LibSVMConfiguration implements Component {
 
 	@Override
 	public LinkedList<Looc> roughSearch() {
-		// TODO Auto-generated method stub
-		return null;
+		LinkedList<Looc> ret = new LinkedList<Looc>();
+		long milisec = new Date().getTime();
+		for(int c = -5; c <= 15; c+=3)
+			for(int y = -15; y <= 3; y+=3)
+				ret.add(new Looc("looc-" + milisec++, classifier,
+						new String[]{"-S", "0", "-K", "0", "-D", "3", "-G", "" + Math.pow(2, y), "-R", "0.0"
+					               ,"-N", "0.5","-M", "40.0", "-C", "" + Math.pow(2, c), "-E", "0.001", "-P"
+					               ,"0.1","-seed", "1"}));
+		return ret;
 	}
 	
 	
