@@ -25,17 +25,13 @@ public class AdaBoostM1Configuration implements Component {
 	public LinkedList<Looc> tune() {
 		String[] tmp;
 		LinkedList<Looc> list = new LinkedList<Looc>();
+		long milisec = new Date().getTime();
 		for(int it=5; it<=50; it+=5) {
 			for(int p = 10; p<=100; p+=10) {
 				tmp = options.split(" ");
 				tmp[5] = "" + it;
 				tmp[2] = "" + p;
-				list.add(new Looc("looc" + new Date().getTime(), name, tmp));
-				try {
-					Thread.sleep(2);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				list.add(new Looc("looc" + milisec++, name, tmp));
 			}
 		}
 		return list;

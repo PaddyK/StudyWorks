@@ -11,10 +11,16 @@ public class Category implements Component {
 	private Factory factory;
 	
 	public Category(Collection<String> classifierNames) {
-		elements = new LinkedList<>();
+		elements = new LinkedList<Component>();
+		factory = new Factory();
 		for(String s : classifierNames) {
 			elements.add(factory.produceConfiguration(s));
 		}
+	}
+	
+	public Category(String classifierName) {
+		elements = new LinkedList<Component>();
+		elements.add(new Factory().produceConfiguration(classifierName));
 	}
 	
 	@Override
