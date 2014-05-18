@@ -49,7 +49,7 @@ public class ConcurrentProgram {
 		for(double gain : infoGain) {
 			for(int numAttr: numAttributes) {
 				
-				System.out.println("Start loocvs " + infoGain);
+				System.out.println("Start loocvs with infoGain " + gain + " of " + infoGain);
 				paths = preparePaths();
 				list = new MyConcurrentList();
 
@@ -81,8 +81,6 @@ public class ConcurrentProgram {
 					Thread.currentThread().interrupt();
 					break;
 				}
-				System.out.println("Finished classifying");
-				System.out.println("Start persisting in database");
 				int count=0;
 
 				// Persist results
@@ -112,9 +110,9 @@ public class ConcurrentProgram {
 	}
 
 	public static void main(String[] args) {
-		int numLoocs = 5;
+		int numLoocs = 6;
 		int numReader = 4;
-		int numDbWriter = 8;
+		int numDbWriter = 6;
 
 		DbWriter[] writers 					= new DbWriter[numDbWriter];
 		ConcurrentProgram p 				= new ConcurrentProgram("patrick","qwert");
@@ -124,17 +122,21 @@ public class ConcurrentProgram {
 		LoocConcurrentList toConsist     	= new LoocConcurrentList();
 		ArrayList<Integer> numAttributes 	= new ArrayList<Integer>();
 		
-//		for(int i = 0; i < writers.length; i++) {
-//			writers[i] = new DbWriter(toConsist
-//					,"patrick"
-//					,"qwert"
-//					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
-//			writers[i].setName("dbWriter" + (i+1));
-//			writers[i].start();
-//		}
+		for(int i = 0; i < writers.length; i++) {
+			writers[i] = new DbWriter(toConsist
+					,"patrick"
+					,"qwert"
+					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+			writers[i].setName("dbWriter" + (i+1));
+			writers[i].start();
+		}
 		
 		numAttributes.add(-1);
-		infoGain.add(0.2);
+		infoGain.add(1.0);
+		infoGain.add(0.75);
+		infoGain.add(0.5);
+		infoGain.add(0.25);
+		infoGain.add(-1.0);
 
 		if(Utils.isBaseline(args))
 			queue = new Category(Utils.extractClassifierToConfigure(args)).baseline();

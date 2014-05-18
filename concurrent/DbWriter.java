@@ -35,13 +35,15 @@ public class DbWriter extends Thread {
 				if(l.getMyConcurrentEvaluation().getCorrect() + l.getMyConcurrentEvaluation().getIncorrect() == 318) {
 					List<String> list = l.generateInsertStatement();
 					dctrl.writeToTabSeparatedFile(sqlFolder + "SQLDump_" + l.getId(), implode(list));
-					System.out.println("Persisting " + l.getId());
-					if(dctrl != null)
+					System.out.println("\t" + this.getName() + "Persisting " + l.getId());
+					if(dctrl != null) {
 						try {
 							dctrl.executeBatch(list);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
+					}
+					System.out.println("\t" + this.getName() + "Finished");
 				}
 			}
 		}		

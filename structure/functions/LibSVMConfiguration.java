@@ -12,7 +12,7 @@ public class LibSVMConfiguration implements Component {
 	String optionsTuning;
 	
 	public LibSVMConfiguration() {
-		classifier = "weka.functions.LibSVM";
+		classifier = "weka.classifiers.functions.LibSVM";
 		options = "-S 0 -K 0 -D 3 -G 0.0 -R 0.0 -N 0.5 -M 40.0 -C 1.0 -E 0.001 -P 0.1 -seed 1";
 	}
 

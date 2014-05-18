@@ -1042,7 +1042,7 @@ public class DataController {
 			java.sql.Statement stmnt = this.databaseConnection.createStatement();
 			for(String s : statements)
 				stmnt.addBatch(s);
-			System.out.println("Changed Elements in database: " + stmnt.executeBatch());			
+			stmnt.executeBatch();
 		}
 		catch(BatchUpdateException e) {
 			System.err.println(e.getMessage());

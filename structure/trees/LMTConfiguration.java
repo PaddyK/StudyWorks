@@ -24,25 +24,25 @@ public class LMTConfiguration implements Component {
 		for(double beta = 0; beta < 1; beta+=0.1)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-C", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 
-		for(double beta = 0; beta < 1; beta+=0.25)
+		for(double beta = 0; beta < 1; beta+=0.1)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-P", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 
-		for(double beta = 0; beta < 1; beta+=0.25)
+		for(double beta = 0; beta < 1; beta+=0.1)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-C", "-P", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 		
-		for(double beta = 0; beta < 1; beta+=0.25)
+		for(double beta = 0; beta < 1; beta+=0.1)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 		return queue;
 	}
@@ -54,25 +54,25 @@ public class LMTConfiguration implements Component {
 		for(double beta = 0; beta < 1; beta+=0.25)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-C", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 
 		for(double beta = 0; beta < 1; beta+=0.25)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-P", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 
 		for(double beta = 0; beta < 1; beta+=0.25)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-C", "-P", "-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 		
 		for(double beta = 0; beta < 1; beta+=0.25)
 			for(int istc = 0; istc <= 30; istc+=5)
 				queue.add(new Looc("looc-" + milisec++
-						,"weka.classifiers.LMT"
+						,"weka.classifiers.trees.LMT"
 						,new String[]{"-I", "-1", "-M", "" + istc, "-W", "" + beta}));
 		return queue;
 	}
