@@ -30,7 +30,7 @@ public class AdaBoostM1Configuration implements Component {
 			for(int p = 10; p<=100; p+=10) {
 				tmp = options.split(" ");
 				tmp[5] = "" + it;
-				tmp[2] = "" + p;
+				tmp[1] = "" + p;
 				list.add(new Looc("looc" + milisec++, name, tmp));
 			}
 		}
@@ -39,7 +39,17 @@ public class AdaBoostM1Configuration implements Component {
 
 	@Override
 	public LinkedList<Looc> roughSearch() {
-		// TODO Auto-generated method stub
-		return null;
+		String[] tmp;
+		LinkedList<Looc> list = new LinkedList<Looc>();
+		long milisec = new Date().getTime();
+		for(int it=5; it<=20; it+=5) {
+			for(int p = 10; p<=100; p+=10) {
+				tmp = options.split(" ");
+				tmp[5] = "" + it;
+				tmp[1] = "" + p;
+				list.add(new Looc("looc" + milisec++, name, tmp));
+			}
+		}
+		return list;
 	}
 }
