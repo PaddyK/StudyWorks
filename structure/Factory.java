@@ -1,12 +1,9 @@
 package structure;
 
-import structure.functions.LibSVMConfiguration;
-import structure.functions.SimpleLogisticConfiguration;
-import structure.lazy.KStarConfiguration;
+import structure.functions.*;
+import structure.lazy.*;
 import structure.meta.*;
-import structure.trees.LMTConfiguration;
-import structure.trees.REPTreeConfiguration;
-import structure.trees.RandomForestConfiguration;
+import structure.trees.*;
 
 public class Factory {
 	private String defaultClassifier;
@@ -19,8 +16,10 @@ public class Factory {
 		Component component;
 		switch(classifierName) {
 		case "AdaBoostM1"		: component = new AdaBoostM1Configuration(defaultClassifier); break;
+		case "ADTree"			: component = new ADTreeConfiguration(); break;
 		case "Bagging" 			: component = new BaggingConfiguration(defaultClassifier); break;
 		case "KStar" 			: component = new KStarConfiguration(); break;
+		case "LADTree"			: component = new LADTreeConfiguration(); break;
 		case "LibSVM"			: component = new LibSVMConfiguration(); break;
 		case "LMT" 				: component = new LMTConfiguration(); break;
 		case "MetaCost" 		: component = new MetaCostConfiguration(defaultClassifier); break;
