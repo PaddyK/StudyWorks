@@ -7,26 +7,43 @@ import structure.Component;
 import concurrent.Looc;
 
 public class RandomForestConfiguration implements Component {
-
+	
+	private String classifier;
+	public RandomForestConfiguration() {
+		classifier = "weka.classifiers.trees.RandomForest";
+	}
+	
 	@Override
 	public LinkedList<Looc> baseline() {
 		LinkedList<Looc> queue = new LinkedList<Looc>();
 		queue.add(new Looc("loocv-" + new Date().getTime()
-				, "weka.classifiers.trees.RandomForest"
+				, classifier
 				, null));
 		return queue;
 	}
 
 	@Override
 	public LinkedList<Looc> tune() {
-		// TODO Auto-generated method stub
-		return null;
+		LinkedList<Looc> queue = new LinkedList<Looc>();
+		long milisec = new Date().getTime();
+		for(int k = 0; k < 24; k+=8)
+			for(int i = 1; i < 50; i++)
+				queue.add(new Looc("looc-" + milisec
+						,classifier
+						,new String[]{"-I", "" + i, "-K", "" + k, "-S", "1"}));
+		return queue;
 	}
 
 	@Override
 	public LinkedList<Looc> roughSearch() {
-		// TODO Auto-generated method stub
-		return null;
+		LinkedList<Looc> queue = new LinkedList<Looc>();
+		long milisec = new Date().getTime();
+		for(int k = 0; k < 24; k+=8)
+			for(int i = 1; i < 51; i+=5)
+				queue.add(new Looc("looc-" + milisec
+						,classifier
+						,new String[]{"-I", "" + i, "-K", "" + k, "-S", "1"}));
+		return queue;
 	}
 	
 }
