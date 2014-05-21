@@ -30,6 +30,26 @@ public class Factory {
 		}
 		return component;
 	}
+	public static String getClassifierPath(String classifierName) {
+		String component;
+		switch(classifierName) {
+		case "AdaBoostM1"		: component = "weka.classifiers.meta.AdaBoostM1"; break;
+		case "ADTree"			: component = "weka.classifiers.trees.ADTree"; break;
+		case "Bagging" 			: component = "weka.classifiers.meta.Bagging"; break;
+		case "J48"				: component = "weka.classifiers.trees.J48"; break;
+		case "KStar" 			: component = "weka.classifiers.lazy.KStar"; break;
+		case "LADTree"			: component = "weka.classifiers.trees.LADTree"; break;
+		case "LibSVM"			: component = "weka.classifiers.functions.LibSVM"; break;
+		case "LMT" 				: component = "weka.classifiers.trees.LMT"; break;
+		case "MetaCost" 		: component = "weka.classifiers.meta.MetaCost"; break;
+		case "NaiveBayes"		: component = "weka.classifiers.bayes.NaiveBayes"; break;
+		case "RandomForest" 	: component = "weka.classifiers.trees.RandomForest"; break;
+		case "REPTree" 			: component = "weka.classifiers.trees.REPTree"; break;
+		case "SimpleLogistic" 	: component = "weka.classifiers.functions.SimpleLogistic"; break;
+		default: component = null;
+		}
+		return component;
+	}
 	
 	public void setMetaClassifier(String classifier) {
 		defaultClassifier = classifier;

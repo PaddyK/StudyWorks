@@ -54,7 +54,7 @@ public class ClassifierAttribute extends Attribute {
 			tmp = "\"" + classifier.getPath();
 			
 			if(!options.isEmpty())
-				tmp +=  options.get(index);
+				tmp +=  " " + options.get(index);
 			ret.get(index).add(tmp + "\"");
 		}while(++index < options.size());
 		

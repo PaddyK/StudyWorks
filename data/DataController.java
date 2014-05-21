@@ -70,7 +70,9 @@ public class DataController {
 	*/
 	List<String> protoHeader;
 	
-	public DataController() { }
+	private boolean mysql;
+	
+	public DataController() { mysql = false; }
 	
 	/**
 	 * Constructor for class DataController. Takes a username and password.
@@ -83,6 +85,7 @@ public class DataController {
 		this.jdbcConnectionString = "com.mysql.jdbc.Driver";
 		this.databaseUrl = "jdbc:mysql://localhost/StudyWorks";
 		this.databaseConnection = null;
+		this.mysql = false;
 		
 		protoHeader = new ArrayList<String>();
 		protoHeader.add("PatientId");
@@ -110,12 +113,16 @@ public class DataController {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
 		}
 		catch(SQLException e) {
+			mysql = false;
 			System.err.println("Failed to create connection to database: url " + this.databaseUrl +
 					"user " + this.user);
 			e.printStackTrace();
 		}
 	}
 
+	public boolean isMysql() {
+		return mysql;
+	}
 	
 	/**
 	 * Reads all .gpr files from a directory into mysql database and includes identifier from sample name

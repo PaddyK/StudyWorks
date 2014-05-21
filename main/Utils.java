@@ -1,12 +1,12 @@
 package main;
 
-public final class Utils {
+public final class MyUtils {
 	public static String extractClassifierToConfigure(String[] args) {
 		String cSwitch = "-C";
 		return searchArgs(cSwitch, args);
 	}
 	
-	private static String searchArgs(String aSwitch, String[] args) {
+	public static String searchArgs(String aSwitch, String[] args) {
 		for(int i = 0; i < args.length; i++)
 			if(args[i].equalsIgnoreCase(aSwitch))
 				return args[i+1];

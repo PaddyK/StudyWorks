@@ -1,11 +1,17 @@
 package main;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import parser.Setup;
+import parser.common.simpleLexer;
+import parser.common.simpleParser;
+
+import org.antlr.v4.runtime.ANTLRFileStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 import data.DataController;
 import classification.WekaController;
@@ -19,6 +25,69 @@ public class ConcurrentProgram {
 	private String username;
 	private String password;
 
+	private static void oldApproach(String[] args) {
+
+		int numLoocs = 6;
+		int numReader = 4;
+		int numDbWriter = 6;
+
+		DbWriter[] writers 					= new DbWriter[numDbWriter];
+		ConcurrentProgram p 				= new ConcurrentProgram("patrick","qwert");
+		LinkedList<Looc> queue  		 	= new LinkedList<Looc>();
+		LinkedList<Looc> execute 			= new LinkedList<Looc>();
+		ArrayList<Double> infoGain 			= new ArrayList<Double>();
+		LoocConcurrentList toConsist     	= new LoocConcurrentList();
+		ArrayList<Integer> numAttributes 	= new ArrayList<Integer>();
+		
+		for(int i = 0; i < writers.length; i++) {
+			writers[i] = new DbWriter(toConsist
+					,"patrick"
+					,"qwert"
+					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+			writers[i].setName("dbWriter" + (i+1));
+			writers[i].start();
+		}
+		
+		numAttributes.add(-1);
+		infoGain.add(1.0);
+		infoGain.add(0.75);
+		infoGain.add(0.5);
+		infoGain.add(0.25);
+		infoGain.add(-1.0);
+
+		if(MyUtils.isBaseline(args))
+			queue = new Category(MyUtils.extractClassifierToConfigure(args)).baseline();
+		if(MyUtils.isTune(args))
+			queue = new Category(MyUtils.extractClassifierToConfigure(args)).tune();
+		if(MyUtils.isRoughSearch(args))
+			queue = new Category(MyUtils.extractClassifierToConfigure(args)).roughSearch();
+
+		do{
+			while(execute.size() < numLoocs && !queue.isEmpty()) {
+				execute.add(queue.poll());
+			}			
+			p.performLoocv(execute
+					,toConsist
+					,infoGain
+					,numAttributes
+					,numReader);
+			execute.clear();
+		}while(!queue.isEmpty());
+		
+		for(int i = 0; i < writers.length; i++)
+			writers[i].interrupt();
+		try {
+			for(int i = 0; i < writers.length; i++)
+				writers[i].join();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+			e.printStackTrace();
+		}
+
+		System.out.println("Finish\n===========");
+	}
+	
 	public ConcurrentProgram(String username, String password) {
 		wcontroller = new WekaController();
 		dcontroller = new DataController("patrick", "qwert");
@@ -35,6 +104,15 @@ public class ConcurrentProgram {
 	
 	public void initializeQueue(String classifier, String[] options, ConcurrentLinkedQueue<Looc> queue) {
 		queue.add(new Looc("loocv-" + new Date().getTime(), classifier, options));
+	}
+	
+	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
+			double infoGain, double numAttributes, double reader) {
+		List<Double> gain = new ArrayList<Double>();
+		List<Integer> num = new ArrayList<Integer>();
+		gain.add(infoGain);
+		num.add((int)numAttributes);
+		performLoocv(queue, toConsist, gain, num, (int)reader);
 	}
 	
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
@@ -106,68 +184,117 @@ public class ConcurrentProgram {
 			paths.add(new String[]{
 					"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\loocv\\fold-" + i + "_test.arff",
 					"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\loocv\\fold-" + i + "_train.arff"});
+
 		return paths;
 	}
-
-	public static void main(String[] args) {
-		int numLoocs = 6;
-		int numReader = 4;
-		int numDbWriter = 6;
-
-		DbWriter[] writers 					= new DbWriter[numDbWriter];
-		ConcurrentProgram p 				= new ConcurrentProgram("patrick","qwert");
-		LinkedList<Looc> queue  		 	= new LinkedList<Looc>();
-		LinkedList<Looc> execute 			= new LinkedList<Looc>();
-		ArrayList<Double> infoGain 			= new ArrayList<Double>();
-		LoocConcurrentList toConsist     	= new LoocConcurrentList();
-		ArrayList<Integer> numAttributes 	= new ArrayList<Integer>();
-		
-		for(int i = 0; i < writers.length; i++) {
-			writers[i] = new DbWriter(toConsist
-					,"patrick"
-					,"qwert"
-					,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
-			writers[i].setName("dbWriter" + (i+1));
-			writers[i].start();
-		}
-		
-		numAttributes.add(-1);
-		infoGain.add(1.0);
-		infoGain.add(0.75);
-		infoGain.add(0.5);
-		infoGain.add(0.25);
-		infoGain.add(-1.0);
-
-		if(Utils.isBaseline(args))
-			queue = new Category(Utils.extractClassifierToConfigure(args)).baseline();
-		if(Utils.isTune(args))
-			queue = new Category(Utils.extractClassifierToConfigure(args)).tune();
-		if(Utils.isRoughSearch(args))
-			queue = new Category(Utils.extractClassifierToConfigure(args)).roughSearch();
-
-		do{
-			while(execute.size() < numLoocs && !queue.isEmpty()) {
-				execute.add(queue.poll());
-			}			
-			p.performLoocv(execute
-					,toConsist
-					,infoGain
-					,numAttributes
-					,numReader);
-			execute.clear();
-		}while(!queue.isEmpty());
-		
-		for(int i = 0; i < writers.length; i++)
-			writers[i].interrupt();
+	
+	private static List<Setup> useParser(String configFile) {
+		List<Setup> setups = null;
 		try {
-			for(int i = 0; i < writers.length; i++)
-				writers[i].join();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+			ANTLRFileStream		stream = new ANTLRFileStream(configFile);
+			simpleLexer 		lexer  = new simpleLexer(stream);
+			CommonTokenStream	ts     = new CommonTokenStream(lexer);
+			simpleParser      	parser = new simpleParser(ts);
+			setups = parser.document().setups;
+
+
+		} catch(Exception e) {
 			e.printStackTrace();
 		}
-
-		System.out.println("Finish\n===========");
+		return setups;
+	}
+	
+	public static void createLoocvs(LinkedList<Looc> queue, Setup setup) {
+		long milisec = new Date().getTime();
+		if(setup.getClassifier().getOptions().isEmpty())
+			queue.add(new Looc("loocv-" + milisec++
+					,setup.getClassifier().getPath()
+					,null));
+		else
+			for(List<String> l : setup.getClassifier().getOptions()){
+				queue.add(new Looc("loocv-" + milisec++
+						,setup.getClassifier().getPath()
+						,(String[])l.toArray()));
+			}	
+	}
+	
+	public static LinkedList<Looc> prepareBag(LinkedList<Looc> wholeSet, int bagSize) {
+		LinkedList<Looc> subset = new LinkedList<Looc>();
+		while(bagSize > 0 && !wholeSet.isEmpty())
+			subset.add(wholeSet.poll());
+		return subset;
+	}
+	
+	public static void executionFromConfig(String file) {
+		int 	writer;
+		double 	reader;
+		double 	bag;
+		double 	infoGain;
+		double 	numAttributes;
+		
+		DbWriter[] 			writers;
+		LinkedList<Looc> 	queue;
+		List<Setup> 		setups 		= useParser(file);
+		ConcurrentProgram 	p 			= new ConcurrentProgram();
+		LoocConcurrentList 	toConsist	= new LoocConcurrentList();
+		
+		for(Setup s : setups) {
+			queue = new LinkedList<Looc>();
+			createLoocvs(queue, s);
+			
+			/* Retrieve Settings from configuration file
+			 * ========================================== */
+			if((reader = s.getRessource("reader")) == -1)
+				reader = 1;
+			if((writer = (int)s.getRessource("writer")) == -1)
+				writer = 1;
+			if((bag = s.getRessource("bag")) == -1)
+				bag = 1;			
+			infoGain 		= s.getRessource("infogain");
+			numAttributes 	= s.getRessource("numattributes");
+			
+			/* Create and start DBWriters
+			 * ========================================== */
+			writers = new DbWriter[writer];
+			for(int i = 0; i < writers.length; i++) {
+				writers[i] = new DbWriter(toConsist
+						,"patrick"
+						,"qwert"
+						,"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\SQL\\");
+				writers[i].setName("dbWriter" + (i+1));
+				writers[i].start();
+			}
+			
+			/* Perform loocv for bag portion of data
+			 * ========================================== */
+			while(!queue.isEmpty())
+				p.performLoocv(prepareBag(queue, (int)bag)
+						, toConsist
+						, infoGain
+						, (int)numAttributes
+						, (int)reader);
+			
+			/* Interrupt DBWriters and wait for them to terminate
+			 * =================================================== */
+			for(int i = 0; i < writers.length; i++)
+				writers[i].interrupt();
+			try {
+				for(int i = 0; i < writers.length; i++)
+					writers[i].join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				System.err.println("Closing Interrupt Exception on Thread " + Thread.currentThread().getName());
+				e.printStackTrace();
+			}
+		}
+		System.out.println("===============\nFINISHED");
+	}
+	
+	public static void main(String[] args) {
+		String value;
+		if((value = MyUtils.searchArgs("-config", args)) != null)
+			executionFromConfig(value);
+		else
+			oldApproach(args);
 	}
 }

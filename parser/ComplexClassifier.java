@@ -3,6 +3,7 @@ package parser;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
+import structure.Factory;
 
 public class ComplexClassifier implements Classifier {
 	private List<Attribute> attributes;
@@ -53,8 +54,7 @@ public class ComplexClassifier implements Classifier {
 
 	@Override
 	public String getPath() {
-		// TODO connect with factory later
-		return "weka.classifiers.trees.J48";
+		return Factory.getClassifierPath(name);
 	}
 
 	@Override

@@ -3,6 +3,8 @@ package parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import structure.Factory;
+
 public class SimpleClassifier implements Classifier {
 	
 	private String name;
@@ -19,8 +21,7 @@ public class SimpleClassifier implements Classifier {
 
 	@Override
 	public String getPath() {
-		// TODO connect with factory later
-		return "weka.classifiers.trees.J48";
+		return Factory.getClassifierPath(name);
 	}
 
 	@Override

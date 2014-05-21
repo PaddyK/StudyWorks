@@ -36,7 +36,7 @@ public class DbWriter extends Thread {
 					List<String> list = l.generateInsertStatement();
 					dctrl.writeToTabSeparatedFile(sqlFolder + "SQLDump_" + l.getId(), implode(list));
 					System.out.println("\t" + this.getName() + "Persisting " + l.getId());
-					if(dctrl != null) {
+					if(dctrl.isMysql()) {
 						try {
 							dctrl.executeBatch(list);
 						} catch (Exception e) {
