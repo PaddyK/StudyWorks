@@ -5,8 +5,22 @@ import java.util.List;
 import java.util.ArrayList;
 import structure.Factory;
 
+/**
+ * Implements interface Classifier
+ * Represents a classifier for which attributes are specified. These attributes can
+ * represent different values or other classifier
+ * @author kalmbach
+ *
+ */
 public class ComplexClassifier implements Classifier {
+	/**
+	 * List of attributes denoted in configuration file
+	 */
 	private List<Attribute> attributes;
+	
+	/**
+	 * Name of the classifier denoted in configuration file, e.g. J48
+	 */
 	private String name;
 	
 	public ComplexClassifier() {
@@ -14,6 +28,10 @@ public class ComplexClassifier implements Classifier {
 		name = "";
 	}
 	
+	/**
+	 * Adds an attribute to list
+	 * @param attribute
+	 */
 	public void addAttribute(Attribute attribute) {
 		attributes.add(attribute);
 	}
@@ -29,8 +47,16 @@ public class ComplexClassifier implements Classifier {
 		return recursive(attrs);
 	}
 	
+	/**
+	 * Recursive function exploding attribute combinations.
+	 * @param attrs
+	 * @return	Returns combination of all specified attribute values for all attributes
+	 */
 	private List<List<String>> recursive(LinkedList<Attribute> attrs) {	
 		List<List<String>> ret;
+		
+		// If attributes are empty create empty array list
+		// One element should be contained so loops later are executed
 		if(attrs.isEmpty()) {
 			ret = new ArrayList<List<String>>();
 			ret.add(new ArrayList<String>());
@@ -66,6 +92,11 @@ public class ComplexClassifier implements Classifier {
 		return ret;
 	}
 	
+	/**
+	 * Concatenates Strings in given List with spaces
+	 * @param values
+	 * @return	with space concatenated elements of list
+	 */
 	private String implode(List<String> values) {
 		String ret = "";
 		for(String s : values)

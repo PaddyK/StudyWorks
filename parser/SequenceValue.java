@@ -1,5 +1,14 @@
 package parser;
 
+/**
+ * Represents values contained in a squence. Sequences have to be denoted in the form
+ * 		START,NEXT..LAST
+ * Difference of NEXT and START results in step size. This size is added to START.
+ * If START + n * (NEXT - START) = LAST then LAST will be included in sequence else
+ * LAST will not be part of sequence
+ * @author kalmbach
+ *
+ */
 public class SequenceValue {
 	double[] sequence;
 	

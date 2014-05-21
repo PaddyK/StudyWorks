@@ -3,8 +3,21 @@ package parser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Extends Attribute
+ * Represents an attribute growing exponentially, e.g. 2^1,2^2,...
+ * @author kalmbach
+ *
+ */
 public class ExponentialAttribute extends Attribute {
+	/**
+	 * Sequence of values used as exponents
+	 */
 	private SequenceValue exponents;
+	
+	/**
+	 * Base for exponential expression
+	 */
 	private double base;
 	
 	public ExponentialAttribute(String name, MyNumber base, SequenceValue exponents) {

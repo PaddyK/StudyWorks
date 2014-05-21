@@ -1,5 +1,10 @@
 package parser;
 
+/**
+ * Represents a number
+ * @author kalmbach
+ *
+ */
 public class MyNumber {
 	private double value;
 	

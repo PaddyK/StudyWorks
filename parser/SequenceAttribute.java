@@ -3,7 +3,16 @@ package parser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents definition of sequence of values.
+ * @author kalmbach
+ *
+ */
 public class SequenceAttribute extends Attribute {
+	
+	/**
+	 * Values of sequence
+	 */
 	private SequenceValue svalue;
 	
 	public SequenceAttribute(String name, SequenceValue sval) {

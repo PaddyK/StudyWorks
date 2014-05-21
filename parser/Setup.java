@@ -2,8 +2,20 @@ package parser;
 
 import java.util.List;
 
+/**
+ * Represents setup for one experiment. Contains specified classifier and ressources
+ * @author kalmbach
+ *
+ */
 public class Setup {
+	/**
+	 * List of ressources
+	 */
 	private List<ResDef> ressources;
+	
+	/**
+	 * Specified classifier being used to perform experiment
+	 */
 	private Classifier classifier;
 	
 	public Setup(List<ResDef> ressources, Classifier classifier) {

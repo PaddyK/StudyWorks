@@ -1,7 +1,13 @@
 package parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Reprents a swicht, i.e. an attribute not assuming any values (e.G. -U for unpruned)
+ * @author kalmbach
+ *
+ */
 public class SwitchAttribute extends Attribute {
 	public SwitchAttribute(String name) {
 		super(name);
@@ -9,19 +15,19 @@ public class SwitchAttribute extends Attribute {
 
 	@Override
 	public List<List<String>> explode() {
-		// TODO Auto-generated method stub
+		List<List<String>> ret = new ArrayList<List<String>>();
+		ret.add(new ArrayList<String>());
+		ret.get(0).add(name);
 		return null;
 	}
 
 	@Override
 	public int getFirstDimensionSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 
 	@Override
 	public int getSecondDimensionSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 }

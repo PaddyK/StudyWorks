@@ -3,8 +3,16 @@ package parser;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Attribute denoting another classifier, needed for many learner from meta package
+ * @author kalmbach
+ *
+ */
 public class ClassifierAttribute extends Attribute {
 	
+	/**
+	 * Classifier being specified in configuration file
+	 */
 	private Classifier classifier;
 	
 	public ClassifierAttribute(String name, Classifier classifier) {
@@ -22,6 +30,12 @@ public class ClassifierAttribute extends Attribute {
 		}
 	}
 	
+	/**
+	 * Executed if classifier is introduced by switch "-W". In this case attributes for
+	 * classifier are given in String array as well. All attributes after "--" element 
+	 * are passed to second classifier
+	 * @return
+	 */
 	private List<List<String>> explode1() {
 		List<List<String>> given = classifier.getOptions();
 		List<List<String>> ret = new ArrayList<List<String>>();
@@ -42,6 +56,10 @@ public class ClassifierAttribute extends Attribute {
 		return ret;
 	}
 	
+	/**
+	 * Executed if second classifier is denoted with -M or -B. Fully qualified path and
+	 * options are concatenated by spaces and enclosed by double quotes
+	 */
 	private List<List<String>> explode2() {
 		List<String> options = classifier.getOptionsAsString();
 		List<List<String>> ret = new ArrayList<List<String>>();
