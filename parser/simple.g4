@@ -64,9 +64,9 @@ seqval returns [SequenceValue val]:
                     , new MyNumber($e.text)); };
 
 RESNAME 	: ('a'..'z')+;
-NUMBER          : ('0'..'9')+ | ('0'..'9')+ '.' ('0'..'9')+;
+NUMBER          : ('+'|'-')?(('0'..'9')+ ('.'('0'..'9')+ )?);
 HK 		: '"'                                             { skip(); };
 WS              : (' ' | '\t' | '\r\n')                           { skip(); };
 CLASSIFIERNAME 	: ('A'..'Z')(('A'..'Z')|('a'..'z')|('0'..'9'))+;
 ATTRNAME	: (('a'..'z')|('A'..'Z'))+;
-ALPHANUMERIC	: (' '|'\t'|'\v'|'\n'|'\r');
+ALPHANUMERIC	: ('+'|'-')?(('a'..'z')|('A'..'Z')|('0'..'9'))+;
