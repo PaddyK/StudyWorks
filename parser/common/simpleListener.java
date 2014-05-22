@@ -1,4 +1,4 @@
-// Generated from C:\Users\kalmbach\workspace\configFileCompiler\src\parser\simple.g4 by ANTLR 4.1
+// Generated from parser/simple.g4 by ANTLR 4.2.2
 
 package parser.common;
 
@@ -15,17 +15,6 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  * {@link simpleParser}.
  */
 public interface simpleListener extends ParseTreeListener {
-	/**
-	 * Enter a parse tree produced by {@link simpleParser#seqval}.
-	 * @param ctx the parse tree
-	 */
-	void enterSeqval(@NotNull simpleParser.SeqvalContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link simpleParser#seqval}.
-	 * @param ctx the parse tree
-	 */
-	void exitSeqval(@NotNull simpleParser.SeqvalContext ctx);
-
 	/**
 	 * Enter a parse tree produced by {@link simpleParser#document}.
 	 * @param ctx the parse tree
@@ -47,6 +36,39 @@ public interface simpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitResdef(@NotNull simpleParser.ResdefContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link simpleParser#ressources}.
+	 * @param ctx the parse tree
+	 */
+	void enterRessources(@NotNull simpleParser.RessourcesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link simpleParser#ressources}.
+	 * @param ctx the parse tree
+	 */
+	void exitRessources(@NotNull simpleParser.RessourcesContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link simpleParser#seqval}.
+	 * @param ctx the parse tree
+	 */
+	void enterSeqval(@NotNull simpleParser.SeqvalContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link simpleParser#seqval}.
+	 * @param ctx the parse tree
+	 */
+	void exitSeqval(@NotNull simpleParser.SeqvalContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link simpleParser#attribute}.
+	 * @param ctx the parse tree
+	 */
+	void enterAttribute(@NotNull simpleParser.AttributeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link simpleParser#attribute}.
+	 * @param ctx the parse tree
+	 */
+	void exitAttribute(@NotNull simpleParser.AttributeContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link simpleParser#classifier}.
@@ -71,26 +93,15 @@ public interface simpleListener extends ParseTreeListener {
 	void exitLoocv(@NotNull simpleParser.LoocvContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link simpleParser#attribute}.
+	 * Enter a parse tree produced by {@link simpleParser#complexclassifier}.
 	 * @param ctx the parse tree
 	 */
-	void enterAttribute(@NotNull simpleParser.AttributeContext ctx);
+	void enterComplexclassifier(@NotNull simpleParser.ComplexclassifierContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link simpleParser#attribute}.
+	 * Exit a parse tree produced by {@link simpleParser#complexclassifier}.
 	 * @param ctx the parse tree
 	 */
-	void exitAttribute(@NotNull simpleParser.AttributeContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link simpleParser#ressources}.
-	 * @param ctx the parse tree
-	 */
-	void enterRessources(@NotNull simpleParser.RessourcesContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link simpleParser#ressources}.
-	 * @param ctx the parse tree
-	 */
-	void exitRessources(@NotNull simpleParser.RessourcesContext ctx);
+	void exitComplexclassifier(@NotNull simpleParser.ComplexclassifierContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link simpleParser#simpleclassifier}.
@@ -102,15 +113,4 @@ public interface simpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSimpleclassifier(@NotNull simpleParser.SimpleclassifierContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link simpleParser#complexclassifier}.
-	 * @param ctx the parse tree
-	 */
-	void enterComplexclassifier(@NotNull simpleParser.ComplexclassifierContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link simpleParser#complexclassifier}.
-	 * @param ctx the parse tree
-	 */
-	void exitComplexclassifier(@NotNull simpleParser.ComplexclassifierContext ctx);
 }

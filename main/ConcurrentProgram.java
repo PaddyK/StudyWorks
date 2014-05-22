@@ -205,6 +205,7 @@ public class ConcurrentProgram {
 	}
 	
 	public static void createLoocvs(LinkedList<Looc> queue, Setup setup) {
+		String[] arr;
 		long milisec = new Date().getTime();
 		if(setup.getClassifier().getOptions().isEmpty())
 			queue.add(new Looc("loocv-" + milisec++
@@ -212,9 +213,12 @@ public class ConcurrentProgram {
 					,null));
 		else
 			for(List<String> l : setup.getClassifier().getOptions()){
+				arr = new String[l.size()];
+				for(int i=0; i<arr.length; i++)
+					arr[i] = l.get(i);
 				queue.add(new Looc("loocv-" + milisec++
 						,setup.getClassifier().getPath()
-						,(String[])l.toArray()));
+						,arr));
 			}	
 	}
 	
@@ -223,6 +227,46 @@ public class ConcurrentProgram {
 		while(bagSize > 0 && !wholeSet.isEmpty())
 			subset.add(wholeSet.poll());
 		return subset;
+	}
+	
+	public static void offlineTest(String file) {
+		int 	writer;
+		double 	reader;
+		double 	bag;
+		double 	infoGain;
+		double 	numAttributes;
+		
+		LinkedList<Looc> 	queue;
+		List<Setup> 		setups 		= useParser(file);
+		
+		for(Setup s : setups) {
+			queue = new LinkedList<Looc>();
+			createLoocvs(queue, s);
+			
+			/* Retrieve Settings from configuration file
+			 * ========================================== */
+			if((reader = s.getRessource("reader")) == -1)
+				reader = 1;
+			if((writer = (int)s.getRessource("writer")) == -1)
+				writer = 1;
+			if((bag = s.getRessource("bag")) == -1)
+				bag = 1;			
+			infoGain 		= s.getRessource("infogain");
+			numAttributes 	= s.getRessource("numattributes");
+			
+			/* Perform loocv for bag portion of data
+			 * ========================================== */
+			System.out.println("Perform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
+					+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");
+			
+			while(!queue.isEmpty()) {
+				LinkedList<Looc> list = prepareBag(queue, (int)bag);
+				for(Looc l : list)
+					System.out.println(l.getClassifier() + "\t" + l.getOptionString());
+			}
+			
+		}
+		System.out.println("===============\nFINISHED");
 	}
 	
 	public static void executionFromConfig(String file) {
@@ -293,7 +337,7 @@ public class ConcurrentProgram {
 	public static void main(String[] args) {
 		String value;
 		if((value = MyUtils.searchArgs("-config", args)) != null)
-			executionFromConfig(value);
+			offlineTest(value);
 		else
 			oldApproach(args);
 	}

@@ -30,7 +30,7 @@ ressources returns [List<ResDef> rssrcs]
         '</ressources>';
 
 resdef returns [ResDef def]:
-	'<ressource' 'name='  n = RESNAME   'value='  v = NUMBER  '/>'
+	'<ressource' 'name='  n = ATTRNAME   'value='  v = NUMBER  '/>'
     { $def = new ResDef($n.text, new MyNumber($v.text)); };
 
 classifier returns [Classifier clsfr]:
@@ -53,6 +53,8 @@ attribute returns [Attribute attr] :
             {$attr = new ClassifierAttribute($n.text, $c.clsfr); }
 	| '<attr type='  'seq'  'name='  n = ATTRNAME  'value=' v = seqval  '/>'
             {$attr = new SequenceAttribute($n.text, $v.val); }
+	| '<attr type='  'static'  'name='  n = ATTRNAME  'value=' (an=NUMBER|an=ALPHANUMERIC) '/>'
+            {$attr = new StaticAttribute($n.text, $an.text); }
         | '<attr type='  'exp'  'name='  n = ATTRNAME  'base='  b = NUMBER  'exp=' v = seqval  '/>'
             {$attr = new ExponentialAttribute($n.text, new MyNumber($b.text), $v.val); }
         ;
@@ -63,7 +65,7 @@ seqval returns [SequenceValue val]:
                     , new MyNumber($n.text)
                     , new MyNumber($e.text)); };
 
-RESNAME 	: ('a'..'z')+;
+//RESNAME 	: (('a'..'z')|('A'..'Z'))+;
 NUMBER          : ('+'|'-')?(('0'..'9')+ ('.'('0'..'9')+ )?);
 HK 		: '"'                                             { skip(); };
 WS              : (' ' | '\t' | '\r\n')                           { skip(); };

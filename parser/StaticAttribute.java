@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reprents a swicht, i.e. an attribute not assuming any values (e.G. -U for unpruned)
+ * Reprents a static attribute, i.e. an attribute not assuming multiple values (e.G. -C 0.25)
  * @author kalmbach
  *
  */
-public class SwitchAttribute extends Attribute {
-	public SwitchAttribute(String name) {
+public class StaticAttribute extends Attribute {
+	String value;
+	public StaticAttribute(String name, String value) {
 		super(name);
+		this.value = value;
+		System.out.println("Static attribite " + value);
 	}
 
 	@Override
@@ -18,6 +21,7 @@ public class SwitchAttribute extends Attribute {
 		List<List<String>> ret = new ArrayList<List<String>>();
 		ret.add(new ArrayList<String>());
 		ret.get(0).add("-" + name);
+		ret.get(0).add(value);
 		return ret;
 	}
 
@@ -28,6 +32,6 @@ public class SwitchAttribute extends Attribute {
 
 	@Override
 	public int getSecondDimensionSize() {
-		return 1;
+		return 2;
 	}
 }

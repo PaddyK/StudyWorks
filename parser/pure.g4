@@ -10,7 +10,7 @@ ressources :
 	'<ressources>' resdef+ '</ressources>';
 
 resdef :
-	'<ressource' 'name='  RESNAME  'value='  NUMBER  '/>';
+	'<ressource' 'name='  ATTRNAME  'value='  NUMBER  '/>';
 
 classifier :
 	(simpleclassifier | complexclassifier);
@@ -25,6 +25,7 @@ attribute :
 	  '<attr type='  'switch'  'name='  ATTRNAME  '/>'
 	| '<attr type='  'class'  'name='  ATTRNAME  '>' classifier '</attr>'
 	| '<attr type='  'seq'  'name='  ATTRNAME  'value=' seqval  '/>'
+	| '<attr type='  'static'  'name='  ATTRNAME  'value=' (NUMBER|ALPHANUMERIC) '/>'
         | '<attr type='  'exp'  'name='  ATTRNAME  'base='  NUMBER  'exp=' seqval  '/>'
         ;
 
@@ -37,10 +38,10 @@ start: NUMBER;
 next : NUMBER;
 end  : NUMBER;
 
-RESNAME 	: ('a'..'z')+;
+//RESNAME 	: (('a'..'z')|('A'..'Z'))+;
 NUMBER          : ('+'|'-')?(('0'..'9')+ ('.'('0'..'9')+ )?);
 HK 		: '"'                   { skip(); };
 WS 		: (' ' | '\t' | '\r\n') { skip(); };
 CLASSIFIERNAME 	: ('A'..'Z')(('A'..'Z')|('a'..'z')|('0'..'9'))+;
-ATTRNAME	: (('a'..'z')|('A'..'Z'))+;
+ATTRNAME	: (('A'..'Z')|('a'..'z'))+;
 ALPHANUMERIC	: ('+'|'-')?(('a'..'z')|('A'..'Z')|('0'..'9'))+;
