@@ -30,6 +30,7 @@ public class ConcurrentProgram {
 		int numLoocs = 6;
 		int numReader = 4;
 		int numDbWriter = 6;
+		String file;
 
 		DbWriter[] writers 					= new DbWriter[numDbWriter];
 		ConcurrentProgram p 				= new ConcurrentProgram("patrick","qwert");
@@ -61,6 +62,8 @@ public class ConcurrentProgram {
 			queue = new Category(MyUtils.extractClassifierToConfigure(args)).tune();
 		if(MyUtils.isRoughSearch(args))
 			queue = new Category(MyUtils.extractClassifierToConfigure(args)).roughSearch();
+		if((file=MyUtils.searchArgs("-resultfile", args)) == null)
+			file  = "G:\results_param_tuning.csv"; 
 
 		do{
 			while(execute.size() < numLoocs && !queue.isEmpty()) {
@@ -70,7 +73,8 @@ public class ConcurrentProgram {
 					,toConsist
 					,infoGain
 					,numAttributes
-					,numReader);
+					,numReader
+					,args[1]);
 			execute.clear();
 		}while(!queue.isEmpty());
 		
@@ -107,16 +111,16 @@ public class ConcurrentProgram {
 	}
 	
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
-			double infoGain, double numAttributes, double reader) {
+			double infoGain, double numAttributes, double reader, String loocvResultsFile) {
 		List<Double> gain = new ArrayList<Double>();
 		List<Integer> num = new ArrayList<Integer>();
 		gain.add(infoGain);
 		num.add((int)numAttributes);
-		performLoocv(queue, toConsist, gain, num, (int)reader);
+		performLoocv(queue, toConsist, gain, num, (int)reader, loocvResultsFile);
 	}
 	
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
-			List<Double> infoGain, List<Integer> numAttributes, int reader) {
+			List<Double> infoGain, List<Integer> numAttributes, int reader, String loocvResultsFile) {
 		ConcurrentLinkedQueue<String[]> paths;
 		MyConcurrentList list;
 		Thread[] readers = new Thread[reader];
@@ -169,7 +173,7 @@ public class ConcurrentProgram {
 					looc.setInfoGain(gain);
 					looc.consolidateFolds(5);
 					System.out.println("\tlooc " + count + ":\t" + looc.toString());
-					dcontroller.appendToTabSeparatedFile("G:\\Results_Param_Tuning.csv"
+					dcontroller.appendToTabSeparatedFile(loocvResultsFile
 							, looc.toString() + System.getProperty("line.separator"));
 					toConsist.add(looc);
 				}
@@ -269,7 +273,7 @@ public class ConcurrentProgram {
 		System.out.println("===============\nFINISHED");
 	}
 	
-	public static void executionFromConfig(String file) {
+	public static void executionFromConfig(String file, String resultfile) {
 		int 	writer;
 		double 	reader;
 		double 	bag;
@@ -316,7 +320,8 @@ public class ConcurrentProgram {
 						, toConsist
 						, infoGain
 						, (int)numAttributes
-						, (int)reader);
+						, (int)reader
+						, resultfile);
 			
 			/* Interrupt DBWriters and wait for them to terminate
 			 * =================================================== */
@@ -336,9 +341,15 @@ public class ConcurrentProgram {
 	
 	public static void main(String[] args) {
 		String value;
-		if((value = MyUtils.searchArgs("-config", args)) != null)
+		if((value = MyUtils.searchArgs("-config", args)) != null) {
 			offlineTest(value);
-		else
+			String file = null;
+			if((MyUtils.searchArgs("-resultfile", args)) == null)
+				file = "G:\\results_param_tuning.csv";
+			executionFromConfig(value, file);
+		}
+		else {
 			oldApproach(args);
+		}
 	}
 }

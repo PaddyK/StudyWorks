@@ -132,6 +132,8 @@ public class Looc extends LoocvComponent{
 	 * @return
 	 */
 	public synchronized String getOptionString() {
+		if(classifierOptions == null)
+			return "standard_options";
 		String ret = "";
 		for(String s : classifierOptions) {
 			ret += s + " ";
