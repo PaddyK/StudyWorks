@@ -74,6 +74,7 @@ public class ConcurrentProgram {
 					,infoGain
 					,numAttributes
 					,numReader
+					,1
 					,args[1]);
 			execute.clear();
 		}while(!queue.isEmpty());
@@ -111,16 +112,16 @@ public class ConcurrentProgram {
 	}
 	
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
-			double infoGain, double numAttributes, double reader, String loocvResultsFile) {
+			double infoGain, double numAttributes, double reader, int numClassifier, String loocvResultsFile) {
 		List<Double> gain = new ArrayList<Double>();
 		List<Integer> num = new ArrayList<Integer>();
 		gain.add(infoGain);
 		num.add((int)numAttributes);
-		performLoocv(queue, toConsist, gain, num, (int)reader, loocvResultsFile);
+		performLoocv(queue, toConsist, gain, num, (int)reader, numClassifier, loocvResultsFile);
 	}
 	
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
-			List<Double> infoGain, List<Integer> numAttributes, int reader, String loocvResultsFile) {
+			List<Double> infoGain, List<Integer> numAttributes, int reader, int numClassifier, String loocvResultsFile) {
 		ConcurrentLinkedQueue<String[]> paths;
 		MyConcurrentList list;
 		Thread[] readers = new Thread[reader];
@@ -275,6 +276,7 @@ public class ConcurrentProgram {
 	
 	public static void executionFromConfig(String file, String resultfile) {
 		int 	writer;
+		int		numClassifier;
 		double 	reader;
 		double 	bag;
 		double 	infoGain;
@@ -297,7 +299,9 @@ public class ConcurrentProgram {
 			if((writer = (int)s.getRessource("writer")) == -1)
 				writer = 1;
 			if((bag = s.getRessource("bag")) == -1)
-				bag = 1;			
+				bag = 1;
+			if((numClassifier = (int)s.getRessource("classifier")) == -1)
+				numClassifier = 1;
 			infoGain 		= s.getRessource("infogain");
 			numAttributes 	= s.getRessource("numattributes");
 			
@@ -321,6 +325,7 @@ public class ConcurrentProgram {
 						, infoGain
 						, (int)numAttributes
 						, (int)reader
+						, numClassifier
 						, resultfile);
 			
 			/* Interrupt DBWriters and wait for them to terminate
