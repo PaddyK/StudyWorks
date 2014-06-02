@@ -32,4 +32,12 @@ public final class MyUtils {
 	public static boolean isRoughSearch(String[] args) {
 		return checkArgs("-s", args);
 	}
+	
+	public static boolean isDebug(String[] args) {
+		return checkArgs("-debug", args);
+	}
+	
+	public static boolean isWithConfig(String[] args) {
+		return checkArgs("-config", args);
+	}
 }

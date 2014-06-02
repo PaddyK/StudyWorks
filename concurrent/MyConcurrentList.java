@@ -42,6 +42,14 @@ public class MyConcurrentList extends ConcurrentLinkedQueue<MyWekaSet> {
 		boolean ret = super.add(set);
 		if(this.size() == 1)
 			notifyAll();
+		if(this.size() > 10) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				e.printStackTrace();
+			}
+		}
 		return ret;
 	}
 	
@@ -58,6 +66,8 @@ public class MyConcurrentList extends ConcurrentLinkedQueue<MyWekaSet> {
 				Thread.currentThread().interrupt();
 			};
 		}
+		if(this.size() < 5)
+			notifyAll();
 		return super.poll();
 	}
 }

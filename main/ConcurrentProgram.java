@@ -341,15 +341,17 @@ public class ConcurrentProgram {
 	
 	public static void main(String[] args) {
 		String value;
-		if((value = MyUtils.searchArgs("-config", args)) != null) {
+		if(MyUtils.isDebug(args) && MyUtils.isWithConfig(args)) {
+			value = MyUtils.searchArgs("-config", args);
 			offlineTest(value);
+		}
+		else if(MyUtils.isWithConfig(args)) {
+			value = MyUtils.searchArgs("-config", args);
 			String file = null;
 			if((MyUtils.searchArgs("-resultfile", args)) == null)
 				file = "G:\\results_param_tuning.csv";
 			executionFromConfig(value, file);
 		}
-		else {
-			oldApproach(args);
-		}
+		else oldApproach(args);
 	}
 }

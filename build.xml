@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-	<project name="StudyWorks" default="execute" basedir=".">
+	<project name="StudyWorks" default="build_execute" basedir=".">
 		<property environment="env"/>
 		<property name="build.dir" value="build"/>
 		<property name="target.release" value="1.7"/>
@@ -92,22 +92,51 @@
 			<jar destfile="StudyWorks.jar"
 				basedir="${build.dir}">
 				<fileset dir="${build.dir}" />
-				<!--<fileset dir="lib"/>-->
 				<manifest>
 					<attribute name="Main-Class" value="main.ConcurrentProgram"/>
-					<attribute name="Class-Path" value="lib/antlr-4.2.2-complete.jar lib/weka.jar lib/mysql-connector-java-5.1.30-bin.jar" />
+					<attribute name="Class-Path" value="lib/antlr-4.2.2-complete.jar lib/weka.jar lib/mysql-connector-java-5.1.29-bin.jar lib/LibSVM.jar lib/LibLINEAR.jar" />
 				</manifest>
 			</jar>
 		</target>
 		
-		<target name="execute" depends="package" description="Run program">
+		<target name="execute" description="Run program">
 			<java jar="${basedir}/StudyWorks.jar" fork="true">
+				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
+				<arg value="-Xmx6144" />
+				<arg value="-Xms4096" />
+				<arg value="-config" />
+				<arg value="${config}" />
+			</java>
+		</target>
+		
+		<target name="build_execute" depends="package" description="Run program">
+			<java jar="${basedir}/StudyWorks.jar" fork="true">
+				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
+				<arg value="-Xmx6144" />
+				<arg value="-Xms4096" />
 				<arg value="-config" />
 				<arg value="${config}" />
 				<classpath>
 					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
 					<pathelement location="${basedir}/lib/weka.jar" />
-					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.30-bin.jar" />
+					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.29-bin.jar" />
+					<pathelement location="${basedir}/lib/LibSVM.jar" />
+					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
+				</classpath>
+			</java>
+		</target>
+		
+		<target name="debug" description="Run program">
+			<java jar="${basedir}/StudyWorks.jar" fork="true">
+				<arg value="-debug" />
+				<arg value="-config" />
+				<arg value="${config}" />
+				<classpath>
+					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
+					<pathelement location="${basedir}/lib/weka.jar" />
+					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.29-bin.jar" />
+					<pathelement location="${basedir}/lib/LibSVM.jar" />
+					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
 				</classpath>
 			</java>
 		</target>

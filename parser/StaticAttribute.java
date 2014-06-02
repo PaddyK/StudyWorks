@@ -13,7 +13,6 @@ public class StaticAttribute extends Attribute {
 	public StaticAttribute(String name, String value) {
 		super(name);
 		this.value = value;
-		System.out.println("Static attribite " + value);
 	}
 
 	@Override
