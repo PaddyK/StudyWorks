@@ -30,7 +30,7 @@ ressources returns [List<ResDef> rssrcs]
         '</ressources>';
 
 resdef returns [ResDef def]:
-	'<ressource' 'name='  n = ATTRNAME   'value='  v = NUMBER  '/>'
+	'<ressource' 'name='  n = TEXT   'value='  v = NUMBER  '/>'
     { $def = new ResDef($n.text, new MyNumber($v.text)); };
 
 classifier returns [Classifier clsfr]:
@@ -38,24 +38,24 @@ classifier returns [Classifier clsfr]:
     | cc = complexclassifier { $clsfr = $cc.cc; });
 
 simpleclassifier returns [SimpleClassifier sc]:
-	'<classifier name='  n = CLASSIFIERNAME { $sc = new SimpleClassifier($n.text); }
+	'<classifier name='  n = classifiername { $sc = new SimpleClassifier($n.name); }
      '/>';
 	
 complexclassifier returns [ComplexClassifier cc]
 @init{ $cc = new ComplexClassifier(); }:
-	'<classifier name='  n = CLASSIFIERNAME { $cc.setName($n.text); }
+	'<classifier name='  n = classifiername { $cc.setName($n.name); }
      '>' (a = attribute { $cc.addAttribute($a.attr); })+ '</classifier>';
 
 attribute returns [Attribute attr] :
-	  '<attr type='  'switch'  'name='  n = ATTRNAME  '/>'
+	  '<attr type='  'switch'  'name='  n = TEXT  '/>'
             {$attr = new SwitchAttribute($n.text); }
-	| '<attr type='  'class'  'name='  n = ATTRNAME  '>' c = classifier '</attr>'
+	| '<attr type='  'class'  'name='  n = TEXT  '>' c = classifier '</attr>'
             {$attr = new ClassifierAttribute($n.text, $c.clsfr); }
-	| '<attr type='  'seq'  'name='  n = ATTRNAME  'value=' v = seqval  '/>'
+	| '<attr type='  'seq'  'name='  n = TEXT  'value=' v = seqval  '/>'
             {$attr = new SequenceAttribute($n.text, $v.val); }
-	| '<attr type='  'static'  'name='  n = ATTRNAME  'value=' (an=NUMBER|an=ALPHANUMERIC) '/>'
-            {$attr = new StaticAttribute($n.text, $an.text); }
-        | '<attr type='  'exp'  'name='  n = ATTRNAME  'base='  b = NUMBER  'exp=' v = seqval  '/>'
+	| '<attr type='  'static'  'name='  n = TEXT  'value=' av = attrval '/>'
+            {$attr = new StaticAttribute($n.text, $av.val); }
+        | '<attr type='  'exp'  'name='  n = TEXT  'base='  b = NUMBER  'exp=' v = seqval  '/>'
             {$attr = new ExponentialAttribute($n.text, new MyNumber($b.text), $v.val); }
         ;
 
@@ -65,10 +65,25 @@ seqval returns [SequenceValue val]:
                     , new MyNumber($n.text)
                     , new MyNumber($e.text)); };
 
-//RESNAME 	: (('a'..'z')|('A'..'Z'))+;
+attrval returns [String val]
+@init { $val = ""; } :
+	(v = NUMBER { if(!$val.equals(""))$val += " "; $val += $v.text; } 
+    |    t = TEXT   { if(!$val.equals(""))$val += " "; $val += $t.text; }
+    |    s = string { if(!$val.equals(""))$val += " "; $val += $s.str; } )+;
+
+classifiername returns [String name]
+@init { $name = ""; } : 
+       (t = TEXT { $name += $t.text; } 
+       | n = NUMBER { $name += $n.text; })+;
+
+string returns [String str]
+@init { $str = ""; } :
+    st1 = STRINGENCLOSE { $str += $st1.text; } 
+    (t = TEXT { $str += $t.text; })+ 
+    st2 = STRINGENCLOSE { $str += $st2.text; };
+
 NUMBER          : ('+'|'-')?(('0'..'9')+ ('.'('0'..'9')+ )?);
-HK 		: '"'                                             { skip(); };
-WS              : (' ' | '\t' | '\r\n')                           { skip(); };
-CLASSIFIERNAME 	: ('A'..'Z')(('A'..'Z')|('a'..'z')|('0'..'9'))+;
-ATTRNAME	: (('a'..'z')|('A'..'Z'))+;
-ALPHANUMERIC	: ('+'|'-')?(('a'..'z')|('A'..'Z')|('0'..'9'))+;
+TEXT            : (('A'..'Z') | ('a'..'z') | '.' | '-' )+;
+STRINGENCLOSE   : '\\"';
+HK 		: '"'                   { skip(); };
+WS 		: (' ' | '\t' | '\r\n') { skip(); };

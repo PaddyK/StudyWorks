@@ -16,7 +16,7 @@
 			<pathelement path="${build.dir}/main" />
 		</path>
 		
-		<target name="build_main" depends="build_data,build_concurrent,build_classification,build_structure,build_grammar"
+		<target name="build_main" depends="build_data,build_concurrent,build_classification,build_structure,build_parser"
 			description="Compile files for StudyWorks project concurrent">
 			<mkdir dir="${build.dir}"/>
 			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
@@ -57,15 +57,7 @@
 			</javac>
 		</target>
 		
-		<target name="build_parser" depends="build_structure" description="Compiling parser for configuration files">
-			<mkdir dir="${build.dir}" />
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="parser"/>
-				<classpath refid="external_jars" />
-			</javac>
-		</target>
-		
-		<target name="build_grammar" description="Creates ANTL Parser and Lexer" depends="build_parser">
+		<target name="build_grammar" depends="build_structure,build_parser" description="Creates ANTL Parser and Lexer">
 			<mkdir dir="${build.dir}"/>
 			<java jar="lib/antlr-4.2.2-complete.jar" fork="true">
 				<arg value="-o" />
@@ -76,6 +68,29 @@
 			</java>
 			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
 				<src path="parser/common" />
+				<classpath refid="external_jars" />
+			</javac>
+		</target>
+		
+		<target name="build_grammar_only" description="Creates ANTL Parser and Lexer">
+			<mkdir dir="${build.dir}"/>
+			<java jar="lib/antlr-4.2.2-complete.jar" fork="true">
+				<arg value="-o" />
+				<arg value="parser/common" />
+				<arg value="-listener" />
+				<arg value="-no-visitor" />
+				<arg value="parser/simple.g4" />
+			</java>
+			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
+				<src path="parser/common" />
+				<classpath refid="external_jars" />
+			</javac>
+		</target>
+		
+		<target name="build_parser" description="Compiling parser for configuration files">
+			<mkdir dir="${build.dir}" />
+			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
+				<src path="parser"/>
 				<classpath refid="external_jars" />
 			</javac>
 		</target>

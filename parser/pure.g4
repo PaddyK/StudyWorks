@@ -10,38 +10,36 @@ ressources :
 	'<ressources>' resdef+ '</ressources>';
 
 resdef :
-	'<ressource' 'name='  ATTRNAME  'value='  NUMBER  '/>';
+	'<ressource' 'name='  TEXT  'value='  NUMBER  '/>';
 
 classifier :
 	(simpleclassifier | complexclassifier);
 
 simpleclassifier :
-	'<classifier name='  CLASSIFIERNAME  '/>';
+	'<classifier name='  classifiername  '/>';
 	
 complexclassifier :
-	'<classifier name='  CLASSIFIERNAME  '>' attribute+ '</classifier>';
+	'<classifier name='  classifiername  '>' attribute+ '</classifier>';
 
 attribute :
-	  '<attr type='  'switch'  'name='  ATTRNAME  '/>'
-	| '<attr type='  'class'  'name='  ATTRNAME  '>' classifier '</attr>'
-	| '<attr type='  'seq'  'name='  ATTRNAME  'value=' seqval  '/>'
-	| '<attr type='  'static'  'name='  ATTRNAME  'value=' (NUMBER|ALPHANUMERIC) '/>'
-        | '<attr type='  'exp'  'name='  ATTRNAME  'base='  NUMBER  'exp=' seqval  '/>'
+	  '<attr type='  'switch'  'name=' TEXT '/>'
+	| '<attr type='  'class'  'name='  TEXT  '>' classifier '</attr>'
+	| '<attr type='  'seq'  'name='  TEXT  'value=' seqval  '/>'
+	| '<attr type='  'static'  'name='  TEXT  'value=' attrval '/>'
+        | '<attr type='  'exp'  'name='  TEXT  'base='  NUMBER  'exp=' seqval  '/>'
         ;
 
 attrval :
-	NUMBER | ALPHANUMERIC;
+	(NUMBER | TEXT | string)+;
 
-seqval: start ',' next '..' end;
+seqval: NUMBER ',' NUMBER '..' NUMBER;
 
-start: NUMBER;
-next : NUMBER;
-end  : NUMBER;
+classifiername 	: (TEXT | NUMBER)+;
 
-//RESNAME 	: (('a'..'z')|('A'..'Z'))+;
+string : STRINGENCLOSE TEXT+ STRINGENCLOSE;
+
 NUMBER          : ('+'|'-')?(('0'..'9')+ ('.'('0'..'9')+ )?);
+TEXT            : (('A'..'Z') | ('a'..'z') | '.' | '-' )+;
+STRINGENCLOSE   : '\\"';
 HK 		: '"'                   { skip(); };
 WS 		: (' ' | '\t' | '\r\n') { skip(); };
-CLASSIFIERNAME 	: ('A'..'Z')(('A'..'Z')|('a'..'z')|('0'..'9'))+;
-ATTRNAME	: (('A'..'Z')|('a'..'z'))+;
-ALPHANUMERIC	: ('+'|'-')?(('a'..'z')|('A'..'Z')|('0'..'9'))+;
