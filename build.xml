@@ -109,7 +109,7 @@
 				<fileset dir="${build.dir}" />
 				<manifest>
 					<attribute name="Main-Class" value="main.ConcurrentProgram"/>
-					<attribute name="Class-Path" value="lib/antlr-4.2.2-complete.jar lib/weka.jar lib/mysql-connector-java-5.1.29-bin.jar lib/LibSVM.jar lib/LibLINEAR.jar" />
+					<attribute name="Class-Path" value="lib/antlr-4.2.2-complete.jar lib/weka.jar lib/mysql-connector.jar lib/LibSVM.jar lib/LibLINEAR.jar" />
 				</manifest>
 			</jar>
 		</target>
@@ -134,7 +134,7 @@
 				<classpath>
 					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
 					<pathelement location="${basedir}/lib/weka.jar" />
-					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.29-bin.jar" />
+					<pathelement location="${basedir}/lib/mysql-connector.jar" />
 					<pathelement location="${basedir}/lib/LibSVM.jar" />
 					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
 				</classpath>
@@ -149,7 +149,7 @@
 				<classpath>
 					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
 					<pathelement location="${basedir}/lib/weka.jar" />
-					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.29-bin.jar" />
+					<pathelement location="${basedir}/lib/mysql-connector.jar" />
 					<pathelement location="${basedir}/lib/LibSVM.jar" />
 					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
 				</classpath>

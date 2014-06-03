@@ -111,6 +111,7 @@ public class DataController {
 		
 		try {
 			this.databaseConnection = DriverManager.getConnection(this.databaseUrl, this.user, this.password);
+			mysql = true;
 		}
 		catch(SQLException e) {
 			mysql = false;
