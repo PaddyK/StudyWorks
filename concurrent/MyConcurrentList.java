@@ -68,6 +68,7 @@ public class MyConcurrentList extends ConcurrentLinkedQueue<MyWekaSet> {
 		}
 		if(this.size() < 5)
 			notifyAll();
+		System.out.println(this.size());
 		return super.poll();
 	}
 }
