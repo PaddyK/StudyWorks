@@ -89,7 +89,7 @@
 		</target>
 		
 		<target name="package" depends="build_main" description="create executable jar file">
-			<jar destfile="StudyWorks.jar"
+			<jar destfile="StudyWorks_test.jar"
 				basedir="${build.dir}">
 				<fileset dir="${build.dir}" />
 				<manifest>
@@ -100,7 +100,7 @@
 		</target>
 		
 		<target name="execute" description="Run program">
-			<java jar="${basedir}/StudyWorks.jar" fork="true">
+			<java jar="${basedir}/StudyWorks_test.jar" fork="true">
 				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
 				<arg value="-Xmx6144" />
 				<arg value="-Xms4096" />
@@ -110,7 +110,7 @@
 		</target>
 		
 		<target name="build_execute" depends="package" description="Run program">
-			<java jar="${basedir}/StudyWorks.jar" fork="true">
+			<java jar="${basedir}/StudyWorks_test.jar" fork="true">
 				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
 				<arg value="-Xmx6144" />
 				<arg value="-Xms4096" />
@@ -127,7 +127,7 @@
 		</target>
 		
 		<target name="debug" description="Run program">
-			<java jar="${basedir}/StudyWorks.jar" fork="true">
+			<java jar="${basedir}/StudyWorks_test.jar" fork="true">
 				<arg value="-debug" />
 				<arg value="-config" />
 				<arg value="${config}" />

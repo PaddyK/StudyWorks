@@ -54,6 +54,7 @@ public class ClassifyWorker extends Thread {
 						if(looc.isAntibodiesSet())
 							fold.setAntibodies(set.test());
 						looc.addFold(fold);
+						System.out.println(fold.getId());
 					}
 				}
 			}
