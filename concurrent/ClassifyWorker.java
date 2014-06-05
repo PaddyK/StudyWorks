@@ -1,5 +1,7 @@
 package concurrent;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import weka.classifiers.Evaluation;
@@ -32,15 +34,17 @@ public class ClassifyWorker extends Thread {
 		MyClassifier classifier;
 		Evaluation eval;
 		ConcurrentFold fold;
+		String output;
+		SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
 
 		// Should run as long as there are elements in the buffer. However it could happen, that the
 		// thread responsible for filling buffer is too slow. Therefore a attribute checked by isDone
 		// indicates whether there are more sets still coming
 		while((set = buffer.poll()) != null && !isInterrupted()) {
 			try {
-//				set = buffer.poll();
 				if(set != null) {
 					for(Looc looc : loocs) {
+						output = format.format(new Date().getTime());
 						classifier = new MyClassifier(looc.getClassifier()
 								,looc.getOptions()
 								,looc.isDiscretize()
@@ -54,7 +58,9 @@ public class ClassifyWorker extends Thread {
 						if(looc.isAntibodiesSet())
 							fold.setAntibodies(set.test());
 						looc.addFold(fold);
-						System.out.println(fold.getId());
+						
+						output += " - " + format.format(new Date().getTime());
+						System.out.println("\t" + output + " " + fold.getId() + " " + fold.getMyConcurrentEvaluation().getAccuracy());
 					}
 				}
 			}

@@ -1,5 +1,6 @@
 package main;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -123,16 +124,18 @@ public class ConcurrentProgram {
 	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
 			List<Double> infoGain, List<Integer> numAttributes, int reader, int numClassifier, String loocvResultsFile) {
 		ConcurrentLinkedQueue<String[]> paths;
-		MyConcurrentList list;
-		Thread[] readers = new Thread[reader];
-		Thread classifier1 = null;
-		ConcurrentLinkedQueue<Looc> execute = new ConcurrentLinkedQueue<Looc>();
+		MyConcurrentList 				list;
+		Thread[] 						readers		= new Thread[reader];
+		Thread[] 						classifiers	= new Thread[numClassifier];
+		ConcurrentLinkedQueue<Looc> 	execute		= new ConcurrentLinkedQueue<Looc>();
+		SimpleDateFormat				dateFormat	= new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 		execute.addAll(queue);
 		
 		for(double gain : infoGain) {
 			for(int numAttr: numAttributes) {
 				
-				System.out.println("Start loocvs with infoGain " + gain + " of " + infoGain);
+				System.out.println(dateFormat.format(new Date().getTime()) + 
+						": Start loocvs with infoGain " + gain + " of " + infoGain);
 				paths = preparePaths();
 				list = new MyConcurrentList();
 
@@ -146,20 +149,36 @@ public class ConcurrentProgram {
 					readers[i].setName("reader" + (i+1));
 					readers[i].start();
 				}
-
-				classifier1 = new ClassifyWorker(execute, list);
-				classifier1.setName("classifier1");
-				classifier1.start();
+				
+				for(int i = 0; i < classifiers.length; i++) {
+					classifiers[i] = new ClassifyWorker(execute, list);
+					classifiers[i].setName("classifier" + i);
+					classifiers[i].start();
+				}
 
 				// Wait for threads
 				//============================================
 				try {
 					for(int i = 0; i < readers.length; i++)
 						readers[i].join();
-					list.setDone();
-					classifier1.join();
+
 				}
 				catch(InterruptedException e) {
+					System.err.println("Error on joining readers");
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+					break;
+				}
+				
+				list.setDone();
+				
+				try {
+
+					for(int i = 0; i < classifiers.length; i++)
+						classifiers[i].join();
+				}
+				catch(InterruptedException e) {
+					System.err.println("Error on joining writers");
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
 					break;
@@ -173,7 +192,7 @@ public class ConcurrentProgram {
 					looc.setFeatures(numAttr);
 					looc.setInfoGain(gain);
 					looc.consolidateFolds(5);
-					System.out.println("\tlooc " + count + ":\t" + looc.toString());
+					System.out.println("\t " + dateFormat.format(new Date().getTime()) + ": looc " + count + ":\t" + looc.toString());
 					dcontroller.appendToTabSeparatedFile(loocvResultsFile
 							, looc.toString() + System.getProperty("line.separator"));
 					toConsist.add(looc);
