@@ -238,8 +238,12 @@ public class ConcurrentProgram {
 		else
 			for(List<String> l : setup.getClassifier().getOptions()){
 				arr = new String[l.size()];
-				for(int i=0; i<arr.length; i++)
-					arr[i] = l.get(i);
+				for(int i=0; i<arr.length; i++) {
+					if(l.get(i).indexOf(".0") == -1)
+						arr[i] = l.get(i);
+					else
+						arr[i] = l.get(i).substring(0, l.get(i).indexOf(".0"));
+				}
 				queue.add(new Looc("loocv-" + milisec++
 						,setup.getClassifier().getPath()
 						,arr));

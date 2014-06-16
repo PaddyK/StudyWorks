@@ -19,7 +19,7 @@ public class SequenceValue {
 				/(next.getValue() - start.getValue()) + 1)];
 		sequence[0] = start.getValue();
 		for(int i = 1; i < sequence.length; i++)
-			sequence[i] = sequence[i-1] + next.getValue() - start.getValue();
+			sequence[i] = sequence[i-1] + next.getValue() - start.getValue(); // Difference ist step size
 	}
 	
 	public double[] getSequence() {
