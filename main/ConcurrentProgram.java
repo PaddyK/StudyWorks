@@ -259,6 +259,7 @@ public class ConcurrentProgram {
 	
 	public static void offlineTest(String file) {
 		int 	writer;
+		int		numClassifier;
 		double 	reader;
 		double 	bag;
 		double 	infoGain;
@@ -278,20 +279,28 @@ public class ConcurrentProgram {
 			if((writer = (int)s.getRessource("writer")) == -1)
 				writer = 1;
 			if((bag = s.getRessource("bag")) == -1)
-				bag = 1;			
+				bag = 1;
+			if((numClassifier = (int)s.getRessource("classifier")) == -1)
+				numClassifier = 1;			
 			infoGain 		= s.getRessource("infogain");
 			numAttributes 	= s.getRessource("numattributes");
 			
 			/* Perform loocv for bag portion of data
 			 * ========================================== */
-			System.out.println("Perform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
-					+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");
+			for(int i=0; i<80; i++)
+				System.out.print("-");
+			System.out.println("\nPerform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
+					+"\n\tclassifier:\t\t"+numClassifier+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");
 			
 			while(!queue.isEmpty()) {
 				LinkedList<Looc> list = prepareBag(queue, (int)bag);
 				for(Looc l : list)
 					System.out.println(l.getClassifier() + "\t" + l.getOptionString());
 			}
+		
+			for(int i=0; i<80; i++)
+				System.out.print("-");
+			System.out.print("\n\n");
 			
 		}
 		System.out.println("===============\nFINISHED");
