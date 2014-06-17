@@ -252,8 +252,10 @@ public class ConcurrentProgram {
 	
 	public static LinkedList<Looc> prepareBag(LinkedList<Looc> wholeSet, int bagSize) {
 		LinkedList<Looc> subset = new LinkedList<Looc>();
-		while(bagSize > 0 && !wholeSet.isEmpty())
+		while(bagSize > 0 && !wholeSet.isEmpty()) {
 			subset.add(wholeSet.poll());
+			bagSize--;
+		}
 		return subset;
 	}
 	
