@@ -114,13 +114,22 @@
 			</jar>
 		</target>
 		
-		<target name="execute" description="Run program">
+		<target name="check_if_attributes_set">
+			<condition property="isSetAttributes" value="true">
+				<and>
+					<isset property="config" />
+					<isset property="loocvfile"/>
+				</and>
+			</condition>
+		</target>
+		
+		<target name="execute" description="Run program" depends="check_if_attributes_set" if="isSetAttributes">
 			<java jar="${basedir}/StudyWorks_test.jar" fork="true">
-				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
-				<arg value="-Xmx6144" />
-				<arg value="-Xms4096" />
-				<arg value="-config" />
-				<arg value="${config}" />
+						<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
+						<arg value="-Xmx6144" />
+						<arg value="-Xms4096" />
+						<arg value="-config" />
+						<arg value="${config}" />
 			</java>
 		</target>
 		

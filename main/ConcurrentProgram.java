@@ -32,6 +32,7 @@ public class ConcurrentProgram {
 		int numReader = 4;
 		int numDbWriter = 6;
 		String file;
+		String pathToArffFiles;
 
 		DbWriter[] writers 					= new DbWriter[numDbWriter];
 		ConcurrentProgram p 				= new ConcurrentProgram("patrick","qwert");
@@ -64,7 +65,8 @@ public class ConcurrentProgram {
 		if(MyUtils.isRoughSearch(args))
 			queue = new Category(MyUtils.extractClassifierToConfigure(args)).roughSearch();
 		if((file=MyUtils.searchArgs("-resultfile", args)) == null)
-			file  = "G:\results_param_tuning.csv"; 
+			file  = "G:\results_param_tuning.csv";
+		pathToArffFiles = MyUtils.searchArgs("-loocfiles", args);
 
 		do{
 			while(execute.size() < numLoocs && !queue.isEmpty()) {
@@ -72,6 +74,7 @@ public class ConcurrentProgram {
 			}			
 			p.performLoocv(execute
 					,toConsist
+					,pathToArffFiles
 					,infoGain
 					,numAttributes
 					,numReader
@@ -112,16 +115,16 @@ public class ConcurrentProgram {
 		queue.add(new Looc("loocv-" + new Date().getTime(), classifier, options));
 	}
 	
-	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
+	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist, String pathToArffFiles,
 			double infoGain, double numAttributes, double reader, int numClassifier, String loocvResultsFile) {
 		List<Double> gain = new ArrayList<Double>();
 		List<Integer> num = new ArrayList<Integer>();
 		gain.add(infoGain);
 		num.add((int)numAttributes);
-		performLoocv(queue, toConsist, gain, num, (int)reader, numClassifier, loocvResultsFile);
+		performLoocv(queue, toConsist, pathToArffFiles, gain, num, (int)reader, numClassifier, loocvResultsFile);
 	}
 	
-	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist,
+	public void performLoocv(LinkedList<Looc> queue, LoocConcurrentList toConsist, String pathToArffFiles,
 			List<Double> infoGain, List<Integer> numAttributes, int reader, int numClassifier, String loocvResultsFile) {
 		ConcurrentLinkedQueue<String[]> paths;
 		MyConcurrentList 				list;
@@ -136,7 +139,7 @@ public class ConcurrentProgram {
 				
 				System.out.println(dateFormat.format(new Date().getTime()) + 
 						": Start loocvs with infoGain " + gain + " of " + infoGain);
-				paths = preparePaths();
+				paths = preparePaths(pathToArffFiles);
 				list = new MyConcurrentList();
 
 				// Prepare classifier
@@ -202,12 +205,12 @@ public class ConcurrentProgram {
 		}
 	}
 
-	private ConcurrentLinkedQueue<String[]> preparePaths() {
+	private ConcurrentLinkedQueue<String[]> preparePaths(String pathToFolder) {
 		ConcurrentLinkedQueue<String[]> paths = new ConcurrentLinkedQueue<String[]>();
 		for(int i = 1; i <= 159; i++)
 			paths.add(new String[]{
-					"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\loocv\\fold-" + i + "_test.arff",
-					"G:\\Documents\\DHBW\\5Semester\\Study_Works\\antibodies\\Data Analysis\\Arff\\loocv\\fold-" + i + "_train.arff"});
+					pathToFolder + "\\fold-" + i + "_test.arff",
+					pathToFolder + "\\fold-" + i + "_train.arff"});
 
 		return paths;
 	}
@@ -308,7 +311,7 @@ public class ConcurrentProgram {
 		System.out.println("===============\nFINISHED");
 	}
 	
-	public static void executionFromConfig(String file, String resultfile) {
+	public static void executionFromConfig(String file, String resultfile, String pathToArffFiles) {
 		int 	writer;
 		int		numClassifier;
 		double 	reader;
@@ -356,6 +359,7 @@ public class ConcurrentProgram {
 			while(!queue.isEmpty())
 				p.performLoocv(prepareBag(queue, (int)bag)
 						, toConsist
+						, pathToArffFiles
 						, infoGain
 						, (int)numAttributes
 						, (int)reader
@@ -389,7 +393,8 @@ public class ConcurrentProgram {
 			String file = null;
 			if((MyUtils.searchArgs("-resultfile", args)) == null)
 				file = "G:\\results_param_tuning.csv";
-			executionFromConfig(value, file);
+			String pathToArffFiles = MyUtils.searchArgs("-loocvfiles", args);
+			executionFromConfig(value, file, pathToArffFiles);
 		}
 		else oldApproach(args);
 	}
