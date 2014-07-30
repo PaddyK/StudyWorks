@@ -4,10 +4,14 @@
 		<property name="build.dir" value="build"/>
 		<property name="target.release" value="1.7"/>
 		<property name="source.release" value="1.7" />
+		<property name="jar.classpath" value="lib/mysql-connector-java-5.1.30-bin.jar lib/weka.jar lib/ConfigFileCompiler.jar lib/antlr-4.2.2-complete.jar" />
 		
 		<path id="external_jars">
 			<fileset dir="lib">
-				<include name="*.jar"/>
+				<include name="antlr-4.2.2-complete.jar"/>
+				<include name="mysql-connector-java-5.1.30-bin.jar"/>
+				<include name="weka.jar"/>
+				<include name="ConfigFileCompiler.jar"/>
 			</fileset>
 			<pathelement path="${build.dir}" />
 			<pathelement path="${build.dir}/classification" />
@@ -16,19 +20,11 @@
 			<pathelement path="${build.dir}/main" />
 		</path>
 		
-		<target name="build_main" depends="build_data,build_concurrent,build_classification,build_structure,build_parser"
+		<target name="build_main" depends="build_data,build_concurrent"
 			description="Compile files for StudyWorks project concurrent">
 			<mkdir dir="${build.dir}"/>
 			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
 				<src path="main" />
-				<classpath refid="external_jars"/>
-			</javac>
-		</target>
-		
-		<target name="build_classification" description="Compile files for StudyWorks project concurrent">
-			<mkdir dir="${build.dir}"/>
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="classification" />
 				<classpath refid="external_jars"/>
 			</javac>
 		</target>
@@ -49,52 +45,6 @@
 			</javac>
 		</target>
 		
-		<target name="build_structure" depends="build_concurrent" description="Compiling structure package">
-			<mkdir dir="${build.dir}"/>
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="structure"/>
-				<classpath refid="external_jars"/>
-			</javac>
-		</target>
-		
-		<target name="build_grammar" depends="build_structure,build_parser" description="Creates ANTL Parser and Lexer">
-			<mkdir dir="${build.dir}"/>
-			<java jar="lib/antlr-4.2.2-complete.jar" fork="true">
-				<arg value="-o" />
-				<arg value="parser/common" />
-				<arg value="-listener" />
-				<arg value="-no-visitor" />
-				<arg value="parser/simple.g4" />
-			</java>
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="parser/common" />
-				<classpath refid="external_jars" />
-			</javac>
-		</target>
-		
-		<target name="build_grammar_only" description="Creates ANTL Parser and Lexer">
-			<mkdir dir="${build.dir}"/>
-			<java jar="lib/antlr-4.2.2-complete.jar" fork="true">
-				<arg value="-o" />
-				<arg value="parser/common" />
-				<arg value="-listener" />
-				<arg value="-no-visitor" />
-				<arg value="parser/simple.g4" />
-			</java>
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="parser/common" />
-				<classpath refid="external_jars" />
-			</javac>
-		</target>
-		
-		<target name="build_parser" description="Compiling parser for configuration files">
-			<mkdir dir="${build.dir}" />
-			<javac destdir="${build.dir}" source="${source.release}" target="${target.release}">
-				<src path="parser"/>
-				<classpath refid="external_jars" />
-			</javac>
-		</target>
-		
 		<target name="clean">
 			<delete>
 				<fileset dir="${build.dir}">
@@ -109,7 +59,7 @@
 				<fileset dir="${build.dir}" />
 				<manifest>
 					<attribute name="Main-Class" value="main.ConcurrentProgram"/>
-					<attribute name="Class-Path" value="lib/antlr-4.2.2-complete.jar lib/weka.jar lib/mysql-connector.jar lib/LibSVM.jar lib/LibLINEAR.jar" />
+					<attribute name="Class-Path" value="${jar.classpath}" />
 				</manifest>
 			</jar>
 		</target>
@@ -145,13 +95,6 @@
 				<arg value="-Xms4096" />
 				<arg value="-config" />
 				<arg value="${config}" />
-				<classpath>
-					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
-					<pathelement location="${basedir}/lib/weka.jar" />
-					<pathelement location="${basedir}/lib/mysql-connector.jar" />
-					<pathelement location="${basedir}/lib/LibSVM.jar" />
-					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
-				</classpath>
 			</java>
 		</target>
 		
