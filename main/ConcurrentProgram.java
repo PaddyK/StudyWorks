@@ -196,78 +196,6 @@ public class ConcurrentProgram {
 		List<ExperimentSetup>	setups 		= useParser(file);
 		Object					tmp;
 	
-		
-		for(ClassifierSetup cSetup : eSetup.getClassifierSetups()) {
-			queue = new LinkedList<Looc>();
-			createLoocvs(queue, cSetup);
-			
-			/* Retrieve Settings from configuration file
-			 * ========================================== */
-			if((tmp = eSetup.getResource("reader")) == null)
-				reader = 1;
-			else
-				reader = (Integer)tmp;
-			
-			if((tmp = eSetup.getResource("writer")) == null)
-				writer = 1;
-			else
-				writer = (Integer)tmp;
-			
-			if((tmp = eSetup.getResource("bag")) == null)
-				bag = 1;
-			else
-				bag = (Integer)tmp;
-				
-			if((tmp = eSetup.getResource("infogain")) == null) {
-				infoGain = new ArrayList<Double>();
-				infoGain.add(-1.0);
-			}
-			else if(tmp instanceof List)
-				infoGain = (List<Double>) tmp;
-			else {
-				infoGain = new ArrayList<Double>();
-				infoGain.add((Double)tmp);
-			}
-			
-			if((tmp = eSetup.getResource("numAttributes")) == null) {
-				numAttributes = new ArrayList<Integer>();
-				numAttributes.add(-1);
-			}
-			else if(tmp instanceof List)
-				numAttributes = (List<Integer>) tmp;
-			else {
-				numAttributes = new ArrayList<Integer>();
-				numAttributes.add((Integer)tmp);
-			}
-			
-			/* Perform loocv for bag portion of data
-			 * ========================================== */
-			System.out.println("Perform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
-					+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");
-				
-			while(!queue.isEmpty()) {
-				LinkedList<Looc> list = prepareBag(queue, (int)bag);
-				for(Looc l : list)
-					System.out.println(l.getClassifier() + "\t" + l.getOptionString());
-			}
-		}
-		System.out.println("===============\nFINISHED");
-	}
-	
-	public static void executionFromConfig(String file, String resultfile) {
-		int 			writer;
-		double 			reader;
-		double 			bag;
-		List<Double> 	infoGain;
-		List<Integer>	numAttributes;
-		
-		DbWriter[] 				writers;
-		LinkedList<Looc> 		queue;
-		List<ExperimentSetup>	setups 		= useParser(file);
-		ConcurrentProgram 		p 			= new ConcurrentProgram();
-		LoocConcurrentList 		toConsist	= new LoocConcurrentList();
-		Object					tmp;
-		
 		for(ExperimentSetup eSetup : setups) {
 			for(ClassifierSetup cSetup : eSetup.getClassifierSetups()) {
 				queue = new LinkedList<Looc>();
@@ -289,6 +217,91 @@ public class ConcurrentProgram {
 					bag = 1;
 				else
 					bag = (Integer)tmp;
+					
+				if((tmp = eSetup.getResource("infogain")) == null) {
+					infoGain = new ArrayList<Double>();
+					infoGain.add(-1.0);
+				}
+				else if(tmp instanceof List)
+					infoGain = (List<Double>) tmp;
+				else {
+					infoGain = new ArrayList<Double>();
+					infoGain.add((Double)tmp);
+				}
+				
+				if((tmp = eSetup.getResource("numAttributes")) == null) {
+					numAttributes = new ArrayList<Integer>();
+					numAttributes.add(-1);
+				}
+				else if(tmp instanceof List)
+					numAttributes = (List<Integer>) tmp;
+				else {
+					numAttributes = new ArrayList<Integer>();
+					numAttributes.add((Integer)tmp);
+				}
+				
+				/* Perform loocv for bag portion of data
+				 * ========================================== */
+				System.out.println("Perform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
+						+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");
+					
+				while(!queue.isEmpty()) {
+					LinkedList<Looc> list = prepareBag(queue, (int)bag);
+					for(Looc l : list)
+						System.out.println(l.getClassifier() + "\t" + l.getOptionString());
+				}
+			}
+		}
+		System.out.println("===============\nFINISHED");
+	}
+	
+	public static void executionFromConfig(String configfile, String resultfile) throws Exception  {
+		int 			writer;
+		int				classifier;
+		int 			reader;
+		double 			bag;
+		String			pathToArffFiles;
+		List<Double> 	infoGain;
+		List<Integer>	numAttributes;
+		
+		DbWriter[] 				writers;
+		LinkedList<Looc> 		queue;
+		List<ExperimentSetup>	setups 		= useParser(configfile);
+		ConcurrentProgram 		p 			= new ConcurrentProgram();
+		LoocConcurrentList 		toConsist	= new LoocConcurrentList();
+		Object					tmp;
+		
+		for(ExperimentSetup eSetup : setups) {
+			for(ClassifierSetup cSetup : eSetup.getClassifierSetups()) {
+				queue = new LinkedList<Looc>();
+				createLoocvs(queue, cSetup);
+				
+				/* Retrieve Settings from configuration file
+				 * ========================================== */
+				if((tmp = eSetup.getResource("reader")) == null)
+					reader = 1;
+				else
+					reader = (Integer)tmp;
+				
+				if((tmp = eSetup.getResource("writer")) == null)
+					writer = 1;
+				else
+					writer = (Integer)tmp;
+				
+				if((tmp = eSetup.getResource("classifier")) == null)
+					classifier = 1;
+				else
+					classifier = (Integer)tmp;
+				
+				if((tmp = eSetup.getResource("bag")) == null)
+					bag = 1;
+				else
+					bag = (Integer)tmp;
+				
+				if((tmp = eSetup.getResource("arffFiles")) == null)
+					throw new Exception("No path to arff files specified!");
+				else
+					pathToArffFiles = (String)tmp;
 				
 				//TODO make list for info gain possible
 				if((tmp = eSetup.getResource("infogain")) == null) {
@@ -330,9 +343,11 @@ public class ConcurrentProgram {
 				while(!queue.isEmpty())
 					p.performLoocv(prepareBag(queue, (int)bag)
 							, toConsist
+							, pathToArffFiles
 							, infoGain
 							, numAttributes
-							, (int)reader
+							, reader
+							, classifier
 							, resultfile);
 				
 				/* Interrupt DBWriters and wait for them to terminate
@@ -363,8 +378,12 @@ public class ConcurrentProgram {
 			String file = null;
 			if((MyUtils.searchArgs("-resultfile", args)) == null)
 				file = "G:\\results_param_tuning.csv";
-			String pathToArffFiles = MyUtils.searchArgs("-loocvfiles", args);
-			executionFromConfig(value, file, pathToArffFiles);
+			try {
+				executionFromConfig(value, file);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
