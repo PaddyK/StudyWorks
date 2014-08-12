@@ -25,6 +25,11 @@ public final class MyUtils {
 		return checkArgs(bSwtich, args);
 	}
 	
+	public static boolean isConversion(String[] args) {
+		String bSwtich = "-convert";
+		return checkArgs(bSwtich, args);
+	}
+	
 	public static boolean isTune(String[] args) {
 		return checkArgs("-t", args);
 	}
