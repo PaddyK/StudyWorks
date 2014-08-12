@@ -9,7 +9,7 @@
 		<path id="external_jars">
 			<fileset dir="lib">
 				<include name="antlr-4.2.2-complete.jar"/>
-				<include name="mysql-connector-java-5.1.30-bin.jar"/>
+				<include name="mysql-connector-java-5.1.29-bin.jar"/>
 				<include name="weka.jar"/>
 				<include name="ConfigFileCompiler.jar"/>
 			</fileset>
@@ -68,23 +68,14 @@
 			<condition property="isSetAttributes" value="true">
 				<and>
 					<isset property="config" />
-					<isset property="loocvfile"/>
-					<isset property="resultfile"/>
 				</and>
 			</condition>
 		</target>
 		
 		<target name="execute" description="Run program" depends="check_if_attributes_set" if="isSetAttributes">
 			<java jar="${basedir}/StudyWorks_test.jar" fork="true">
-				<arg value="-XX:+HeapDumpOnOutOfMemoryError" />
-				<arg value="-Xmx6144" />
-				<arg value="-Xms4096" />
 				<arg value="-config" />
 				<arg value="${config}" />
-				<arg value="-loocvfile" />
-				<arg value="${loocvfile}" />
-				<arg value="-resultfile" />
-				<arg value="${resultfile}" />
 			</java>
 		</target>
 		
