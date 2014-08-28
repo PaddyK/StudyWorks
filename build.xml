@@ -9,7 +9,7 @@
 		<path id="external_jars">
 			<fileset dir="lib">
 				<include name="antlr-4.2.2-complete.jar"/>
-				<include name="mysql-connector-java-5.1.29-bin.jar"/>
+				<include name="mysql-connector-java-5.1.30-bin.jar"/>
 				<include name="weka.jar"/>
 				<include name="ConfigFileCompiler.jar"/>
 			</fileset>
@@ -97,7 +97,7 @@
 				<classpath>
 					<pathelement location="${basedir}/lib/antlr-4.2.2-complete.jar"/>
 					<pathelement location="${basedir}/lib/weka.jar" />
-					<pathelement location="${basedir}/lib/mysql-connector.jar" />
+					<pathelement location="${basedir}/lib/mysql-connector-java-5.1.30.jar" />
 					<pathelement location="${basedir}/lib/LibSVM.jar" />
 					<pathelement location="${basedir}/lib/LibLINEAR.jar" />
 				</classpath>
