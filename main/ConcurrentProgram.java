@@ -139,6 +139,7 @@ public class ConcurrentProgram {
 					looc.setInfoGain(gain);
 					looc.consolidateFolds(5);
 					System.out.println("\t " + dateFormat.format(new Date().getTime()) + ": looc " + count + ":\t" + looc.toString());
+
 					dcontroller.appendToTabSeparatedFile(loocvResultsFile
 							, looc.toString() + System.getProperty("line.separator"));
 					toConsist.add(looc);
@@ -162,17 +163,20 @@ public class ConcurrentProgram {
 			public void setIndex(int idx){index = idx;}
 			@Override
 			public boolean accept(File dir, String name) {
-				if(name.toLowerCase().endsWith(".arff") && name.toLowerCase().startsWith("fold-" + index + "_"))
+				if(name.toLowerCase().endsWith(".arff") )//&& name.toLowerCase().startsWith("fold-" + index + "_"))
 					return true;
 				else
 					return false;
 			}
 		}
-		
 		ConcurrentLinkedQueue<String[]> paths = new ConcurrentLinkedQueue<String[]>();
 		File folder = new File(pathToFolder);
 		MyFilenameFilter filter = new MyFilenameFilter();
 		String tmp[];
+		
+		if(!folder.exists()) {
+			throw new Exception(pathToFolder + " does not exist");
+		}
 		
 		if(folder.isFile()) {
 			System.err.println("Path to arff files is not a folder");
@@ -181,7 +185,11 @@ public class ConcurrentProgram {
 		
 		for(int i = 1; i <=159; i++) {
 			filter.setIndex(i);
-			tmp = folder.list(filter);
+			tmp = folder.list(filter);			
+			if(tmp == null){
+				throw new Exception("No .arff files found in " + pathToFolder);
+			}
+				
 			for(int j=0;j<tmp.length; j++)
 				tmp[j] = pathToFolder + System.getProperty("file.separator") + tmp[j];
 			paths.add(tmp);				

@@ -24,6 +24,7 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 	private double[] falsenegative;
 	private double[] truenegative;
 	private double[] areaUnderRoc;
+	private double[][] confusionMatrix;
 	
 	private void checkNaN() {
 		if(Double.isNaN(meanAbsoluteError))
@@ -93,6 +94,10 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 		falsepositive = new double[eval.confusionMatrix().length];
 		truenegative = new double[eval.confusionMatrix().length];
 		areaUnderRoc = new double[eval.confusionMatrix().length];
+		confusionMatrix = new double[eval.confusionMatrix().length][eval.confusionMatrix().length];
+		for(int i = 0; i < confusionMatrix.length; i++)
+			for(int j = 0; j < confusionMatrix[i].length; j++)
+				confusionMatrix[i][j] = 0;
 		correct = (int)eval.correct();
 		incorrect = (int)eval.incorrect();
 		avgRecall = 0;
@@ -119,6 +124,8 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 		rootMeanSquaredError = eval.rootMeanSquaredError();
 		rootRelativeSquaredError = eval.rootRelativeSquaredError();
 		
+		setConfusionMatrix(eval.confusionMatrix());
+		
 		try {
 			relativeAbsoluteError = eval.relativeAbsoluteError();
 		}
@@ -139,6 +146,10 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 		falsenegative = new double[classes];
 		areaUnderRoc = new double[classes];
 		truenegative = new double[classes];
+		confusionMatrix = new double[classes][classes];
+		for(int i = 0; i < confusionMatrix.length; i++)
+			for(int j = 0; j < confusionMatrix[i].length; j++)
+				confusionMatrix[i][j] = 0;
 		
 		MyConcurrentEvaluation eval;
 		for(ConcurrentFold f : folds) {
@@ -163,6 +174,8 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 			rootRelativeSquaredError += eval.getRootRelativeSquaredError();
 			correct += (int)eval.getCorrect();
 			incorrect += (int)eval.getIncorrect();
+			setConfusionMatrix(eval.getConfusionMatrix());
+			
 		}
 		accuracy = (double)(correct)/((double)(correct + incorrect));
 		avgPrecision /= (double)folds.size();
@@ -308,5 +321,51 @@ public class MyConcurrentEvaluation implements Comparable<Double>{
 	
 	public double[] getF1Score() {
 		return f1score;
+	}
+	
+	public double[][] getConfusionMatrix() {
+		return confusionMatrix;
+	}
+	
+	public void setConfusionMatrix(double[][] matrix) {
+		for(int i = 0; i < matrix.length; i++)
+			for(int j = 0; j < matrix[i].length; j++)
+				confusionMatrix[i][j] += matrix[i][j];
+	}
+	
+//	@Override
+//	public String toString() {
+//		return correct
+//		+ "\t" + incorrect
+//		+ "\t" + accuracy
+//		+ "\t" + avgRecall
+//		+ "\t" + avgPrecision
+//		+ "\t" + avgF1score
+//		+ "\t" + kappa
+//		+ "\t" + meanAbsoluteError
+//		+ "\t" + rootMeanSquaredError 
+//		+ "\t" + relativeAbsoluteError
+//		+ "\t" + rootRelativeSquaredError;
+//		
+//	}
+	
+	@Override
+	public String toString() {
+		return (correct+incorrect)
+				+ "\t" + correct
+				+ "\t" + incorrect
+				+ "\t" + accuracy
+				+ confusionMatrixToString();
+	}
+	
+	public String confusionMatrixToString() {
+		String ret = "";
+		for(int i = 0; i < confusionMatrix.length; i++) {
+			for(int j = 0; j < confusionMatrix[i].length; j++) {
+				ret += "\t" + confusionMatrix[i][j];
+			}
+			ret += ";";
+		}
+		return ret;
 	}
 }
