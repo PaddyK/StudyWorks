@@ -167,17 +167,7 @@ public class Looc extends LoocvComponent{
 	
 	@Override
 	public String toString() {
-		return eval.getCorrect()
-				+ "\t" + eval.getIncorrect() 
-				+ "\t" + eval.getAccuracy() 
-				+ "\t" + eval.getAvgRecall() 
-				+ "\t" + eval.getAvgPrecision() 
-				+ "\t" + eval.getAvgF1score() 
-				+ "\t" + eval.getKappa() 
-				+ "\t" + eval.getMeanAbsoluteError() 
-				+ "\t" + eval.getRootMeanSquaredError() 
-				+ "\t" + eval.getRelativeAbsoluteError() 
-				+ "\t" + eval.getRootRelativeSquaredError() 
+		return eval.toString() 
 				+ "\t'" + id +"'"
 				+ "\t'" + classifier +"'"
 				+ "\t'" + options 

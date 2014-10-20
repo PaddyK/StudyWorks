@@ -1,5 +1,6 @@
 package concurrent;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 import data.DataController;
@@ -23,7 +24,7 @@ public class DbWriter extends Thread {
 	
 	public DbWriter(LoocConcurrentList list, String sqlOutput) {
 		sqlFolder = sqlOutput;
-		dctrl = null;
+		dctrl = new DataController();
 		looc = list;
 	}
 	
@@ -34,7 +35,8 @@ public class DbWriter extends Thread {
 			while((l = looc.poll()) != null) {
 				if(l.getMyConcurrentEvaluation().getCorrect() + l.getMyConcurrentEvaluation().getIncorrect() == 318) {
 					List<String> list = l.generateInsertStatement();
-					dctrl.writeToTabSeparatedFile(sqlFolder + "SQLDump_" + l.getId(), implode(list));
+					String path = Paths.get(sqlFolder, "SQLDump_" + l.getId()).toString();
+					dctrl.writeToTabSeparatedFile(path, implode(list));
 					System.out.println("\t" + this.getName() + "Persisting " + l.getId());
 					if(dctrl != null) {
 						if(dctrl.isMysql()) {
