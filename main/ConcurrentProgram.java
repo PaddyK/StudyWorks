@@ -172,7 +172,8 @@ public class ConcurrentProgram {
 		ConcurrentLinkedQueue<String[]> paths = new ConcurrentLinkedQueue<String[]>();
 		File folder = new File(pathToFolder);
 		MyFilenameFilter filter = new MyFilenameFilter();
-		String tmp[];
+		String[] tmp;
+		String[] toAdd = new String[2];
 		
 		if(folder.isFile()) {
 			System.err.println("Path to arff files is not a folder");
@@ -180,11 +181,22 @@ public class ConcurrentProgram {
 		}		
 		
 		for(int i = 1; i <=159; i++) {
+			toAdd = new String[2];
 			filter.setIndex(i);
 			tmp = folder.list(filter);
-			for(int j=0;j<tmp.length; j++)
-				tmp[j] = pathToFolder + System.getProperty("file.separator") + tmp[j];
-			paths.add(tmp);				
+			if(tmp.length > 2) {
+				System.err.println("More than two arff files for fold" + i + " encountered");
+				throw new Exception("Too many arff files for fold " + i);
+			}
+			for(int j=0;j<tmp.length; j++) {
+				if(tmp[j].contains("test")) {
+					toAdd[0] = pathToFolder + System.getProperty("file.separator") + tmp[j];
+				}
+				else {
+					toAdd[1] = pathToFolder + System.getProperty("file.separator") + tmp[j];
+				}
+			}
+			paths.add(toAdd);
 		}
 		return paths;
 	}
@@ -295,7 +307,7 @@ public class ConcurrentProgram {
 				 * ========================================== */
 				ConcurrentLinkedQueue<String[]> paths = new ConcurrentProgram().preparePaths(arffFolder);
 				for(String[] arr : paths)
-					System.out.println(arr[0] + "\n" + arr[1]);
+					System.out.println(arr[0] + "\t" + arr[1]);
 
 				System.out.println("Perform with:\n\treader:\t\t\t" + reader+"\n\twriter:\t\t\t" + writer+"\n\tbagsize:\t\t"+bag
 						+"\n\tinfo Gain:\t\t "+infoGain+"\n\tnumber Attributes:\t"+numAttributes +"\n");

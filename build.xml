@@ -4,10 +4,10 @@
 		<property name="build.dir" value="build"/>
 		<property name="target.release" value="1.7"/>
 		<property name="source.release" value="1.7" />
-		<property name="jar.classpath" value="lib/mysql-connector-java-5.1.30-bin.jar lib/weka.jar lib/ConfigFileCompiler.jar lib/antlr-4.2.2-complete.jar" />
+		<property name="jar.classpath" value="../libraries/mysql-connector-java-5.1.30-bin.jar ../libraries/weka.jar ../libraries/ConfigFileCompiler.jar ../libraries/antlr-4.2.2-complete.jar" />
 		
 		<path id="external_jars">
-			<fileset dir="lib">
+			<fileset dir="../libraries">
 				<include name="antlr-4.2.2-complete.jar"/>
 				<include name="mysql-connector-java-5.1.30-bin.jar"/>
 				<include name="weka.jar"/>
