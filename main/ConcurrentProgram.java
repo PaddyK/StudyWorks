@@ -163,7 +163,7 @@ public class ConcurrentProgram {
 			public void setIndex(int idx){index = idx;}
 			@Override
 			public boolean accept(File dir, String name) {
-				if(name.toLowerCase().endsWith(".arff") )//&& name.toLowerCase().startsWith("fold-" + index + "_"))
+				if(name.toLowerCase().endsWith(".arff") && name.toLowerCase().startsWith("fold-" + index + "_"))
 					return true;
 				else
 					return false;
