@@ -12,7 +12,7 @@ In order for this contribution the following additional libraries are required:
 * [ConfigFileCompiler](https://github.com/PaddyK/configFileCompiler)
 * [Weka](http://www.cs.waikato.ac.nz/ml/weka/downloading.html)
 * [ANT](http://ant.apache.org/srcdownload.cgi), [ANT Installation Guide](http://ant.apache.org/manual/index.html#installing)
-* [MySQL-Connector]
+* [MySQL JDBC driver](http://dev.mysql.com/downloads/connector/j/)
 
 ANTLR4 is actually needed for the ConfigFileCompiler
 
